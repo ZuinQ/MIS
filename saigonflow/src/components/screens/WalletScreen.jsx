@@ -1,39 +1,112 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
-export default function WalletScreen({ nav }) {
+export default function WalletScreen({ user, nav }) {
   const [balance, setBalance] = useState(0)
   const [showToast, setShowToast] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
-  const [transactions, setTransactions] = useState([
-    { id: 1, type: 'E-bike Rental', detail: 'Ben Thanh → Thao Dien', date: 'Hôm nay, 08:45', amount: '-15,000₫', icon: '⚡', color: '#10b981' },
-    { id: 2, type: 'Metro Ticket', detail: 'Line 1 (1 chặng)', date: 'Hôm qua, 17:30', amount: '-20,000₫', icon: '🚇', color: '#8b5cf6' },
-    { id: 3, type: 'Top Up', detail: 'Momo Wallet', date: '01/05/2026', amount: '+100,000₫', icon: '💳', color: '#3b82f6', isPos: true },
-    { id: 4, type: 'Shuttle Bus', detail: 'District 7 → District 1', date: '28/04/2026', amount: '-25,000₫', icon: '🚌', color: '#3b82f6' },
-  ])
+  const [transactions, setTransactions] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [showAllModal, setShowAllModal] = useState(false)
 
   useEffect(() => {
-    async function fetchTrips() {
-      const { data, error } = await supabase
-        .from('trips')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (data && !error) {
-        const tripTransactions = data.map(t => ({
-          id: t.id,
-          type: 'Rental Trip',
-          detail: `${t.origin} → ${t.destination}`,
-          date: new Date(t.created_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
-          amount: `-${t.cost}`,
-          icon: t.vehicle_id.startsWith('SF-1') ? '⚡' : '🚌',
-          color: t.vehicle_id.startsWith('SF-1') ? '#10b981' : '#3b82f6'
-        }))
-        setTransactions(prev => [...tripTransactions, ...prev])
-      }
+    fetchData()
+  }, [user.email])
+
+  async function fetchData() {
+    setIsLoading(true)
+    // 1. Fetch Balance
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('balance')
+      .eq('email', user.email)
+      .single()
+    if (profile) setBalance(profile.balance)
+
+    // 2. Fetch Transactions from Trips table
+    const { data: trips } = await supabase
+      .from('trips')
+      .select('*')
+      .eq('user_email', user.email)
+      .order('created_at', { ascending: false })
+    
+    if (trips) {
+      const tripTx = trips.map(t => ({
+        id: t.id,
+        type: t.vehicle_id.includes('Bus') ? 'Shuttle Bus' : 'E-bike Rental',
+        detail: `${t.origin} → ${t.destination}`,
+        date: new Date(t.created_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
+        amount: `-${t.cost.toLocaleString()}₫`,
+        icon: t.vehicle_id.includes('Bus') ? '🚌' : '⚡',
+        color: t.vehicle_id.includes('Bus') ? '#3b82f6' : '#10b981',
+        isPos: false
+      }))
+      setTransactions(tripTx)
     }
-    fetchTrips()
-  }, [])
+    setIsLoading(false)
+  }
+
+  const handleTopUp = async (amount) => {
+    const newBalance = balance + amount
+    const { error } = await supabase
+      .from('profiles')
+      .update({ balance: newBalance })
+      .eq('email', user.email)
+    
+    if (!error) {
+      setBalance(newBalance)
+      setToastMsg(`Đã nạp thành công ${amount.toLocaleString('vi-VN')}₫`)
+      setShowToast(true)
+      setTimeout(() => setShowToast(false), 2000)
+      
+      // Add a virtual top-up tx for immediate feedback
+      const topUpTx = {
+        id: Date.now(),
+        type: 'Quick Top-up',
+        detail: 'Momo Wallet',
+        date: 'Vừa xong',
+        amount: `+${amount.toLocaleString('vi-VN')}₫`,
+        icon: '💳',
+        color: '#3b82f6',
+        isPos: true
+      }
+      setTransactions(prev => [topUpTx, ...prev])
+    }
+  }
+
+  const handleTransfer = async () => {
+    const amount = 50000
+    if (balance < amount) {
+      setToastMsg('Số dư không đủ để chuyển!')
+      setShowToast(true)
+      setTimeout(() => setShowToast(false), 2000)
+      return
+    }
+    
+    const newBalance = balance - amount
+    const { error } = await supabase
+      .from('profiles')
+      .update({ balance: newBalance })
+      .eq('email', user.email)
+
+    if (!error) {
+      setBalance(newBalance)
+      setToastMsg(`Đã chuyển thành công ${amount.toLocaleString('vi-VN')}₫`)
+      setShowToast(true)
+      setTimeout(() => setShowToast(false), 2000)
+      
+      setTransactions(prev => [{
+        id: Date.now(),
+        type: 'Transfer',
+        detail: 'Đến: 098***123',
+        date: 'Vừa xong',
+        amount: `-${amount.toLocaleString()}₫`,
+        icon: '💸',
+        color: '#f59e0b',
+        isPos: false
+      }, ...prev])
+    }
+  }
 
   const handleTopUp = async (amount) => {
     const { data: profile } = await supabase.from('profiles').select('balance, email').limit(1).single()
@@ -64,29 +137,38 @@ export default function WalletScreen({ nav }) {
     }
   }
 
-  const handleTransfer = () => {
-    if (balance < 50000) {
-      setToastMsg('Số dư không đủ để chuyển (Tối thiểu 50,000₫)')
+  const handleTransfer = async () => {
+    const amount = 50000
+    if (balance < amount) {
+      setToastMsg('Số dư không đủ để chuyển!')
       setShowToast(true)
       setTimeout(() => setShowToast(false), 2000)
       return
     }
     
-    setBalance(prev => prev - 50000)
-    const newTx = {
-      id: Date.now(),
-      type: 'Transfer',
-      detail: 'Đến bạn bè (098***123)',
-      date: 'Vừa xong',
-      amount: '-50,000₫',
-      icon: '💸',
-      color: '#f59e0b',
-      isPos: false
+    const newBalance = balance - amount
+    const { error } = await supabase
+      .from('profiles')
+      .update({ balance: newBalance })
+      .eq('email', user.email)
+
+    if (!error) {
+      setBalance(newBalance)
+      setToastMsg(`Đã chuyển thành công ${amount.toLocaleString('vi-VN')}₫`)
+      setShowToast(true)
+      setTimeout(() => setShowToast(false), 2000)
+      
+      setTransactions(prev => [{
+        id: Date.now(),
+        type: 'Transfer',
+        detail: 'Đến: 098***123',
+        date: 'Vừa xong',
+        amount: `-${amount.toLocaleString()}₫`,
+        icon: '💸',
+        color: '#f59e0b',
+        isPos: false
+      }, ...prev])
     }
-    setTransactions(prev => [newTx, ...prev])
-    setToastMsg('Đã chuyển thành công 50,000₫ đến bạn bè!')
-    setShowToast(true)
-    setTimeout(() => setShowToast(false), 2000)
   }
 
   return (
@@ -185,34 +267,63 @@ export default function WalletScreen({ nav }) {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div style={{ fontSize: '14px', fontWeight: '800', color: '#1e293b' }}>Recent Activity</div>
-            <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '700', cursor: 'pointer' }}>View All →</div>
+            <div onClick={() => setShowAllModal(true)} style={{ fontSize: '11px', color: '#10b981', fontWeight: '700', cursor: 'pointer' }}>View All →</div>
           </div>
 
           <div style={{ background: 'white', borderRadius: '20px', padding: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+            {transactions.length === 0 ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>Chưa có giao dịch nào</div>
+            ) : (
+              transactions.slice(0, 5).map((t, idx) => (
+                <div key={t.id} style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  padding: '12px',
+                  borderBottom: idx !== Math.min(transactions.length, 5) - 1 ? '1px solid #f1f5f9' : 'none'
+                }}>
+                  <div style={{
+                    width: '40px', height: '40px', borderRadius: '12px',
+                    background: `${t.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '20px'
+                  }}>{t.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>{t.type}</div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{t.date}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '800', color: t.isPos ? '#10b981' : '#1e293b' }}>{t.amount}</div>
+                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>{t.isPos ? 'Thành công' : t.detail}</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* View All Modal */}
+      {showAllModal && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'white', zIndex: 1000, display: 'flex', flexDirection: 'column'
+        }}>
+          <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #e2e8f0' }}>
+            <button onClick={() => setShowAllModal(false)} style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer' }}>←</button>
+            <span style={{ fontWeight: '800', fontSize: '18px' }}>Tất cả giao dịch</span>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
             {transactions.map((t, idx) => (
-              <div key={t.id} style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '12px',
-                borderBottom: idx !== transactions.length - 1 ? '1px solid #f1f5f9' : 'none'
-              }}>
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '12px',
-                  background: `${t.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '20px'
-                }}>{t.icon}</div>
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${t.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>{t.icon}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>{t.type}</div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{t.date}</div>
+                  <div style={{ fontSize: '14px', fontWeight: '700' }}>{t.type}</div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8' }}>{t.date} • {t.detail}</div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '800', color: t.isPos ? '#10b981' : '#1e293b' }}>{t.amount}</div>
-                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>{t.isPos ? 'Thành công' : t.detail}</div>
-                </div>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: t.isPos ? '#10b981' : '#1e293b' }}>{t.amount}</div>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
