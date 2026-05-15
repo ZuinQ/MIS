@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
-export default function ProfileScreen({ user: initialUser, onLogout, nav }) {
+export default function ProfileScreen({ user: initialUser, nav }) {
   const [activeModal, setActiveModal] = useState(null)
   const [user, setUser] = useState({
     name: initialUser?.full_name || 'Minh Nguyễn',
@@ -18,7 +18,12 @@ export default function ProfileScreen({ user: initialUser, onLogout, nav }) {
 
   useEffect(() => {
     async function fetchProfile() {
-      const { data, error } = await supabase.from('profiles').select('*').limit(1).single()
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', initialUser.email)
+        .single()
+      
       if (data && !error) {
         const mappedUser = {
           name: data.full_name,
@@ -30,8 +35,8 @@ export default function ProfileScreen({ user: initialUser, onLogout, nav }) {
         setEditForm(mappedUser)
       }
     }
-    fetchProfile()
-  }, [])
+    if (initialUser?.email) fetchProfile()
+  }, [initialUser?.email])
 
   const handleSaveProfile = async () => {
     const { error } = await supabase
@@ -350,7 +355,6 @@ export default function ProfileScreen({ user: initialUser, onLogout, nav }) {
         </div>
         
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <button onClick={onLogout} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>Log Out</button>
           <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '12px' }}>SaigonFlow v1.0.0 (Tier 4 Build)</div>
         </div>
       </div>

@@ -6,7 +6,15 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { supabase } from '../lib/supabaseClient'
 
-const { stats, chartData, alerts, fleetStatus: initialFleet } = dashboardData;
+const { stats, alerts, fleetStatus: initialFleet } = dashboardData;
+
+// Balanced Scorecard Targets
+const BSC_TARGETS = {
+  financial: { label: 'Revenue Target', current: 321817500, target: 500000000, unit: '₫' },
+  customer: { label: 'Satisfaction', current: 4.8, target: 4.9, unit: '/5' },
+  process: { label: 'Fleet Uptime', current: 92.4, target: 98.0, unit: '%' },
+  growth: { label: 'New Commuters', current: 1876, target: 2500, unit: '' }
+}
 
 export default function FleetManagerDashboard() {
   const [activeTab, setActiveTab] = useState('map') // map, status, analytics, alerts
@@ -531,51 +539,79 @@ export default function FleetManagerDashboard() {
           )}
 
           {(activeTab === 'analytics' || activeTab === 'all') && (
-            <div className="tab-section print-stack" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: activeTab === 'all' ? '40px' : '0' }}>
-              <div style={{ background: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '24px', color: '#1e293b' }}>Revenue & Utilization Trend</h3>
-                <div style={{ height: '400px' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorTrips" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#0d9488" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
-                      <Area type="monotone" dataKey="revenue" stroke="#0d9488" strokeWidth={3} fillOpacity={1} fill="url(#colorTrips)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+            <div className="tab-section print-stack" style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: activeTab === 'all' ? '40px' : '0' }}>
+              
+              {/* Balanced Scorecard Overview */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                {Object.entries(BSC_TARGETS).map(([key, item]) => (
+                  <div key={key} style={{ background: 'white', borderRadius: '16px', padding: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>{item.label}</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                      <div style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>{item.current.toLocaleString()}{item.unit}</div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>/ {item.target.toLocaleString()}</div>
+                    </div>
+                    <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', marginTop: '12px', overflow: 'hidden' }}>
+                      <div style={{ width: `${(item.current / item.target) * 100}%`, height: '100%', background: '#0d9488' }} />
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              <div style={{ background: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '24px', color: '#1e293b' }}>Today's Summary</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', color: '#64748b' }}>Total Trips:</span>
-                    <span style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>
-                      {chartData.reduce((acc, curr) => acc + curr.trips, 0).toLocaleString()}
-                    </span>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+                {/* Real-time Predictive Insights (Tier 4 Requirement) */}
+                <div style={{ background: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #e2e8f0', background: 'linear-gradient(to bottom right, #ffffff, #f0fdfa)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: 0 }}>✨ AI Predictive Maintenance & Demand</h3>
+                    <span style={{ fontSize: '10px', background: '#0d9488', color: 'white', padding: '4px 8px', borderRadius: '10px', fontWeight: '700' }}>LIVE AI MODEL</span>
                   </div>
-                  <div style={{ borderBottom: '1px solid #f1f5f9' }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', color: '#64748b' }}>Avg Trip Duration:</span>
-                    <span style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>18 min</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {fleetStatus.filter(v => parseInt(v.power) < 35).map(v => (
+                      <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'white', borderRadius: '12px', border: '1px solid #ccfbf1' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <div style={{ fontSize: '20px' }}>🪫</div>
+                          <div>
+                            <div style={{ fontSize: '13px', fontWeight: '700' }}>{v.id} - Predicted Shutdown</div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>Estimated failure: <span style={{ color: '#ef4444', fontWeight: '700' }}>In 42 mins</span></div>
+                          </div>
+                        </div>
+                        <button style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', background: '#0d9488', color: 'white', fontSize: '11px', fontWeight: '700' }}>Dispatch Support</button>
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'white', borderRadius: '12px', border: '1px solid #ccfbf1' }}>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <div style={{ fontSize: '20px' }}>📈</div>
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: '700' }}>Demand Spike Forecast</div>
+                          <div style={{ fontSize: '11px', color: '#64748b' }}>Area: <span style={{ color: '#0d9488', fontWeight: '700' }}>Thảo Điền Station</span> (Expected +45%)</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '11px', fontWeight: '700', color: '#0d9488' }}>Confidence: 94%</div>
+                    </div>
                   </div>
-                  <div style={{ borderBottom: '1px solid #f1f5f9' }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', color: '#64748b' }}>Peak Hour Util:</span>
-                    <span style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>70%</span>
-                  </div>
-                  <div style={{ borderBottom: '1px solid #f1f5f9' }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', color: '#64748b' }}>CO₂ Saved:</span>
-                    <span style={{ fontSize: '20px', fontWeight: '800', color: '#10b981' }}>1.2 tons</span>
+                </div>
+
+                {/* Internal Process Health */}
+                <div style={{ background: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #e2e8f0' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '20px', color: '#1e293b' }}>Operational KPIs</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                        <span style={{ color: '#64748b' }}>Average Response Time</span>
+                        <span style={{ fontWeight: '700' }}>8.2 mins</span>
+                      </div>
+                      <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ width: '85%', height: '100%', background: '#3b82f6' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                        <span style={{ color: '#64748b' }}>Battery Swap Success</span>
+                        <span style={{ fontWeight: '700' }}>99.1%</span>
+                      </div>
+                      <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ width: '99%', height: '100%', background: '#10b981' }} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

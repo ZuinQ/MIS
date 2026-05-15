@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { key: 'profile', icon: '👤', label: 'Profile' },
 ]
 
-export default function CommuterSuperApp({ user, onLogout }) {
+export default function CommuterSuperApp({ user }) {
   const [screen, setScreen] = useState('home')
 
   return (
@@ -62,7 +62,7 @@ export default function CommuterSuperApp({ user, onLogout }) {
         {screen === 'trip' && <TripPlannerScreen user={user} nav={setScreen} />}
         {screen === 'ai' && <AIAssistantScreen user={user} nav={setScreen} />}
         {screen === 'wallet' && <WalletScreen user={user} nav={setScreen} />}
-        {screen === 'profile' && <ProfileScreen user={user} onLogout={onLogout} nav={setScreen} />}
+        {screen === 'profile' && <ProfileScreen user={user} nav={setScreen} />}
       </div>
 
       {/* Bottom Nav Bar */}
