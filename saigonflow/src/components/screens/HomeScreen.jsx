@@ -1,10 +1,23 @@
+import { dashboardData } from '../../data/dashboardData.js'
+import { useState } from 'react'
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+
 export default function HomeScreen({ nav }) {
-  const vehicles = [
-    { type: '⚡', name: 'E-bike #E945', dist: '50m', bat: 92, color: '#10b981' },
-    { type: '⚡', name: 'E-bike #E723', dist: '120m', bat: 85, color: '#10b981' },
-    { type: '🚌', name: 'Shuttle #S012', dist: '300m', seats: 8, color: '#3b82f6' },
-    { type: '🚇', name: 'Metro Line 1', dist: '3 min', next: '5 min', color: '#8b5cf6' },
-  ]
+  const [isMapExpanded, setIsMapExpanded] = useState(false)
+  const [selectedPin, setSelectedPin] = useState(null)
+
+  const vehicles = dashboardData.fleetStatus.slice(0, 4).map((v, i) => ({
+    type: v.type === 'E-Bike' ? '⚡' : '🚌',
+    typeText: v.type,
+    name: `${v.type} #${v.id}`,
+    dist: `${(i + 1) * 50}m`, // simulated distance based on index
+    bat: parseInt(v.power),
+    color: v.type === 'E-Bike' ? '#10b981' : '#3b82f6',
+    lat: v.lat,
+    lng: v.lng
+  }))
 
   return (
     <div style={{ background: '#f8fafc' }}>
@@ -25,7 +38,7 @@ export default function HomeScreen({ nav }) {
             <div style={{ color: 'white', fontSize: '22px', fontWeight: '800' }}>Minh Nguyễn</div>
             <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', marginTop: '2px' }}>📍 Quận 1, TP.HCM</div>
           </div>
-          <div style={{
+          <div onClick={() => nav('profile')} style={{
             width: '48px', height: '48px', borderRadius: '50%',
             background: 'rgba(255,255,255,0.2)',
             border: '2px solid rgba(255,255,255,0.4)',
@@ -101,40 +114,25 @@ export default function HomeScreen({ nav }) {
           {/* Map */}
           <div style={{
             height: '180px',
-            background: 'linear-gradient(135deg, #e0f2fe, #d1fae5, #e0e7ff)',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            borderBottom: '1px solid #e2e8f0'
           }}>
-            {/* Roads */}
-            <div style={{ position: 'absolute', top: '40%', left: 0, right: 0, height: '8px', background: 'rgba(253,224,71,0.5)', borderTop: '1px solid rgba(202,138,4,0.4)', borderBottom: '1px solid rgba(202,138,4,0.4)' }} />
-            <div style={{ position: 'absolute', top: '65%', left: 0, right: 0, height: '5px', background: 'rgba(253,224,71,0.35)' }} />
-            <div style={{ position: 'absolute', left: '35%', top: 0, bottom: 0, width: '6px', background: 'rgba(253,224,71,0.45)' }} />
-            <div style={{ position: 'absolute', left: '70%', top: 0, bottom: 0, width: '4px', background: 'rgba(253,224,71,0.35)' }} />
+            <MapContainer center={[10.7769, 106.7009]} zoom={14} zoomControl={false} dragging={false} scrollWheelZoom={false} style={{ width: '100%', height: '100%', zIndex: 1 }}>
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+              <Marker position={[10.7769, 106.7009]} icon={L.divIcon({ html: `<div style="width: 16px; height: 16px; background: #3b82f6; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(59,130,246,0.4)"></div>`, className: '', iconSize: [16,16] })} />
+              {/* Markers from data */}
+              {vehicles.map((v, i) => (
+                <Marker key={i} position={[v.lat, v.lng]} icon={L.divIcon({ html: `<div style="width: 20px; height: 20px; background: ${v.color}; border-radius: 50%; border: 2px solid white; display:flex; align-items:center; justify-content:center; font-size: 10px; box-shadow: 0 2px 8px rgba(16,185,129,0.4)">${v.type}</div>`, className: '', iconSize: [20,20] })} />
+              ))}
+            </MapContainer>
 
-            {/* River */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: '50%', height: '50px', background: 'rgba(96,165,250,0.25)', borderTopRightRadius: '60px' }} />
-
-            {/* User dot */}
-            <div style={{ position: 'absolute', top: '38%', left: '38%', zIndex: 20 }}>
-              <div style={{ width: '16px', height: '16px', background: '#3b82f6', borderRadius: '50%', border: '3px solid white', boxShadow: '0 2px 8px rgba(59,130,246,0.4)' }} />
-              <div style={{ position: 'absolute', inset: '-4px', background: 'rgba(59,130,246,0.2)', borderRadius: '50%' }} className="animate-ping" />
-            </div>
-
-            {/* E-bikes */}
-            {[['30%','50%'],['48%','60%'],['25%','60%'],['55%','35%']].map(([t,l], i) => (
-              <div key={i} style={{ position: 'absolute', top: t, left: l }}>
-                <div style={{ width: '24px', height: '24px', background: '#10b981', borderRadius: '50%', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', boxShadow: '0 2px 8px rgba(16,185,129,0.4)' }}>⚡</div>
-              </div>
-            ))}
-
-            {/* Shuttle */}
-            <div style={{ position: 'absolute', top: '50%', left: '65%' }}>
-              <div style={{ width: '28px', height: '22px', background: '#3b82f6', borderRadius: '6px', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', boxShadow: '0 2px 8px rgba(59,130,246,0.4)' }}>🚌</div>
-            </div>
-
-            {/* Metro */}
-            <div style={{ position: 'absolute', top: '30%', left: '28%' }}>
-              <div style={{ width: '28px', height: '28px', background: '#8b5cf6', borderRadius: '50%', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', boxShadow: '0 2px 8px rgba(139,92,246,0.4)' }}>🚇</div>
+            {/* Invisible overlay to capture click */}
+            <div onClick={() => setIsMapExpanded(true)} style={{ position: 'absolute', inset: 0, zIndex: 1000, cursor: 'pointer' }} />
+            
+            {/* Expand Overlay */}
+            <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.95)', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', color: '#1e293b', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 1001, display: 'flex', alignItems: 'center', gap: '4px', pointerEvents: 'none' }}>
+              🔍 Phóng to
             </div>
 
             {/* Location badge */}
@@ -144,7 +142,7 @@ export default function HomeScreen({ nav }) {
               borderRadius: '20px', padding: '4px 12px',
               display: 'flex', alignItems: 'center', gap: '6px',
               fontSize: '11px', fontWeight: '600', color: '#1e293b',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 1001, pointerEvents: 'none'
             }}>
               <div style={{ width: '6px', height: '6px', background: '#3b82f6', borderRadius: '50%' }} className="animate-pulse" />
               Quận 1, TP.HCM
@@ -209,7 +207,7 @@ export default function HomeScreen({ nav }) {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div style={{ fontWeight: '800', fontSize: '14px', color: '#1e293b' }}>Nearby Vehicles</div>
-            <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '600' }}>See All →</div>
+            <div onClick={() => nav('trip')} style={{ fontSize: '11px', color: '#10b981', fontWeight: '600', cursor: 'pointer' }}>See All →</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {vehicles.map((v, i) => (
@@ -249,6 +247,72 @@ export default function HomeScreen({ nav }) {
           </div>
         </div>
       </div>
+
+      {/* Expanded Map Modal */}
+      {isMapExpanded && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(8px)',
+          zIndex: 1000, display: 'flex', flexDirection: 'column',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{ padding: '20px', background: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontWeight: '800', fontSize: '18px', color: '#1e293b' }}>🗺️ Bản đồ trực tiếp</div>
+            <button onClick={() => { setIsMapExpanded(false); setSelectedPin(null); }} style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>✕</button>
+          </div>
+          
+          <div style={{ flex: 1, position: 'relative', background: '#f8fafc' }}>
+             <MapContainer center={[10.7769, 106.7009]} zoom={15} style={{ width: '100%', height: '100%', zIndex: 1 }} zoomControl={false}>
+               <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+               
+               {/* User Location */}
+               <Marker position={[10.7769, 106.7009]} icon={L.divIcon({ html: `<div style="width: 20px; height: 20px; background: #3b82f6; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(59,130,246,0.4)"></div>`, className: '', iconSize: [20,20] })}>
+                  <Popup><div style={{fontWeight:'700', fontSize:'13px'}}>Vị trí của bạn</div></Popup>
+               </Marker>
+
+               {/* Vehicles & Transit near user */}
+               {vehicles.map((v, i) => (
+                 <Marker 
+                   key={i} 
+                   position={[v.lat, v.lng]}
+                   eventHandlers={{ click: () => setSelectedPin({ name: v.name, bat: v.bat, seats: v.seats, type: `${v.type} ${v.typeText}`, time: v.time || '1 min walk' }) }}
+                   icon={L.divIcon({ html: `<div style="width: 32px; height: 32px; background: ${v.color}; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); color: white">${v.type}</div>`, className: '', iconSize: [32,32] })}
+                 />
+               ))}
+               
+               <Marker 
+                 position={[10.7745, 106.7055]}
+                 eventHandlers={{ click: () => setSelectedPin({ name: 'Metro Line 1', type: '🚇 Metro Station', time: 'Next train in 5 mins' }) }}
+                 icon={L.divIcon({ html: `<div style="width: 32px; height: 32px; background: #8b5cf6; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); color: white">🚇</div>`, className: '', iconSize: [32,32] })}
+               />
+             </MapContainer>
+
+             {selectedPin && (
+               <div style={{ position: 'absolute', bottom: '24px', left: '24px', right: '24px', background: 'white', borderRadius: '20px', padding: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.2)', animation: 'slideUp 0.3s ease-out' }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                   <div>
+                     <div style={{ fontSize: '13px', color: '#10b981', fontWeight: '700', marginBottom: '4px' }}>{selectedPin.type}</div>
+                     <div style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b' }}>{selectedPin.name}</div>
+                   </div>
+                   <div style={{ background: '#f1f5f9', padding: '6px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', color: '#64748b' }}>
+                     📍 50m
+                   </div>
+                 </div>
+                 
+                 <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', fontSize: '13px', color: '#475569' }}>
+                   {selectedPin.bat && <div>🔋 Pin: <span style={{ fontWeight: '700', color: '#10b981' }}>{selectedPin.bat}%</span></div>}
+                   {selectedPin.seats && <div>💺 Chỗ trống: <span style={{ fontWeight: '700', color: '#3b82f6' }}>{selectedPin.seats}</span></div>}
+                   <div>⏱ {selectedPin.time}</div>
+                 </div>
+
+                 <button onClick={() => { setIsMapExpanded(false); nav('trip'); }} style={{ width: '100%', background: 'linear-gradient(135deg, #10b981, #0d9488)', color: 'white', border: 'none', padding: '14px', borderRadius: '12px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
+                   Đặt chuyến ngay
+                 </button>
+               </div>
+             )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

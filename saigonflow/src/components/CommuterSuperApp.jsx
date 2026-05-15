@@ -123,7 +123,7 @@ export default function CommuterSuperApp() {
               key={item.key}
               onClick={() => setScreen(item.key)}
               style={{
-                background: 'none', border: 'none',
+                border: 'none',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', gap: '2px',
                 padding: '6px 12px', borderRadius: '12px',

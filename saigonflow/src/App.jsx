@@ -9,7 +9,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f0fdf4 0%, #f1f5f9 50%, #eff6ff 100%)' }}>
       {/* Top Nav */}
-      <nav style={{
+      <nav className="no-print" style={{
         background: 'white',
         borderBottom: '1px solid #e2e8f0',
         padding: '0 32px',
@@ -87,8 +87,7 @@ export default function App() {
         {activeTab === 'mobile' ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', gap: '48px', flexWrap: 'wrap' }}>
             <div style={{ textAlign: 'center' }}>
-              {/* Info label */}
-              <div style={{
+              <div className="no-print" style={{
                 background: 'white',
                 border: '2px solid #d1fae5',
                 borderRadius: '16px',
