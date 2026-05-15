@@ -4,8 +4,9 @@ import { dashboardData } from '../data/dashboardData.js'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { supabase } from '../lib/supabaseClient'
 
-const { stats, chartData, alerts, fleetStatus } = dashboardData;
+const { stats, chartData, alerts, fleetStatus: initialFleet } = dashboardData;
 
 export default function FleetManagerDashboard() {
   const [activeTab, setActiveTab] = useState('map') // map, status, analytics, alerts
@@ -21,6 +22,20 @@ export default function FleetManagerDashboard() {
   const [filters, setFilters] = useState({ ebike: true, shuttle: true })
   const [tempFilters, setTempFilters] = useState({ ebike: true, shuttle: true })
   const [liveStats, setLiveStats] = useState(stats)
+  const [fleetStatus, setFleetStatus] = useState(initialFleet)
+
+  useEffect(() => {
+    async function fetchFleet() {
+      const { data, error } = await supabase
+        .from('fleet')
+        .select('*')
+      
+      if (data && !error) {
+        setFleetStatus(data)
+      }
+    }
+    fetchFleet()
+  }, [])
 
   const filteredFleet = fleetStatus.filter(v => {
     if (v.type === 'E-Bike' && !filters.ebike) return false;

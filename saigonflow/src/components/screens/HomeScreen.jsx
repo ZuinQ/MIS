@@ -1,14 +1,26 @@
 import { dashboardData } from '../../data/dashboardData.js'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { supabase } from '../../lib/supabaseClient'
 
 export default function HomeScreen({ nav }) {
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [selectedPin, setSelectedPin] = useState(null)
+  const [fleet, setFleet] = useState(dashboardData.fleetStatus)
 
-  const vehicles = dashboardData.fleetStatus.slice(0, 4).map((v, i) => ({
+  useEffect(() => {
+    async function fetchFleet() {
+      const { data, error } = await supabase.from('fleet').select('*')
+      if (data && !error) {
+        setFleet(data)
+      }
+    }
+    fetchFleet()
+  }, [])
+
+  const vehicles = fleet.slice(0, 4).map((v, i) => ({
     type: v.type === 'E-Bike' ? '⚡' : '🚌',
     typeText: v.type,
     name: `${v.type} #${v.id}`,
