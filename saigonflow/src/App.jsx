@@ -1,10 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import CommuterSuperApp from './components/CommuterSuperApp.jsx'
 import FleetManagerDashboard from './components/FleetManagerDashboard.jsx'
+import AuthScreen from './components/screens/AuthScreen.jsx'
 import './index.css'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('mobile')
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('saigonflow_user')
+    if (savedUser) {
+      setUser(JSON.parse(savedUser))
+    }
+  }, [])
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData)
+    localStorage.setItem('saigonflow_user', JSON.stringify(userData))
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+    localStorage.removeItem('saigonflow_user')
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f0fdf4 0%, #f1f5f9 50%, #eff6ff 100%)' }}>
@@ -111,7 +130,11 @@ export default function App() {
                   ))}
                 </div>
               </div>
-              <CommuterSuperApp />
+              {!user ? (
+                <AuthScreen onLoginSuccess={handleLoginSuccess} />
+              ) : (
+                <CommuterSuperApp user={user} onLogout={handleLogout} />
+              )}
             </div>
           </div>
         ) : (

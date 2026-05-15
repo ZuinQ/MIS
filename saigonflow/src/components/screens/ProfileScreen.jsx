@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
-export default function ProfileScreen({ nav }) {
+export default function ProfileScreen({ user: initialUser, onLogout, nav }) {
   const [activeModal, setActiveModal] = useState(null)
   const [user, setUser] = useState({
-    name: 'Loading...',
-    email: '...',
-    phone: '...',
-    badge: '...'
+    name: initialUser?.full_name || 'Minh Nguyễn',
+    email: initialUser?.email || '',
+    phone: initialUser?.phone || '',
+    badge: initialUser?.badge || 'Thành viên Hạng Vàng 🌟'
   })
   const [settings, setSettings] = useState({
     language: 'Tiếng Việt',
@@ -350,7 +350,7 @@ export default function ProfileScreen({ nav }) {
         </div>
         
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <button onClick={() => setActiveModal('logout')} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>Log Out</button>
+          <button onClick={onLogout} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>Log Out</button>
           <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '12px' }}>SaigonFlow v1.0.0 (Tier 4 Build)</div>
         </div>
       </div>

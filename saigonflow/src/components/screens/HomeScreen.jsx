@@ -5,21 +5,24 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { supabase } from '../../lib/supabaseClient'
 
-export default function HomeScreen({ nav }) {
+export default function HomeScreen({ user, nav }) {
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [selectedPin, setSelectedPin] = useState(null)
   const [fleet, setFleet] = useState(dashboardData.fleetStatus)
+  const [balance, setBalance] = useState('...')
 
   useEffect(() => {
-    async function fetchFleet() {
-      const { data, error } = await supabase.from('fleet').select('*')
-      if (data && !error) {
-        setFleet(data)
-      }
+    async function fetchData() {
+      // Fetch Fleet
+      const { data: fleetData } = await supabase.from('fleet').select('*')
+      if (fleetData) setFleet(fleetData)
+      
+      // Fetch Balance
+      const { data: profile } = await supabase.from('profiles').select('balance').eq('email', user.email).single()
+      if (profile) setBalance(profile.balance.toLocaleString('vi-VN') + '₫')
     }
-    fetchFleet()
-  }, [])
-
+    fetchData()
+  }, [user.email])
   const vehicles = fleet.slice(0, 4).map((v, i) => ({
     type: v.type === 'E-Bike' ? '⚡' : '🚌',
     typeText: v.type,
@@ -47,7 +50,7 @@ export default function HomeScreen({ nav }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
           <div>
             <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', marginBottom: '4px' }}>Chào buổi sáng 👋</div>
-            <div style={{ color: 'white', fontSize: '22px', fontWeight: '800' }}>Minh Nguyễn</div>
+            <div style={{ color: 'white', fontSize: '22px', fontWeight: '800' }}>{user.full_name}</div>
             <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', marginTop: '2px' }}>📍 Quận 1, TP.HCM</div>
           </div>
           <div onClick={() => nav('profile')} style={{
@@ -63,7 +66,7 @@ export default function HomeScreen({ nav }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
           {[
             { val: '42', label: 'Trips', icon: '🚲' },
-            { val: '425k₫', label: 'Balance', icon: '💳' },
+            { val: balance, label: 'Balance', icon: '💳' },
             { val: '18kg', label: 'CO₂ Cut', icon: '🌿' }
           ].map(s => (
             <div key={s.label} style={{
