@@ -49,15 +49,28 @@ export default function FleetManagerDashboard() {
   }, [])
 
   return (
+    <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <style>{`
+        .stat-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+      `}</style>
+
+      {/* Top Header */}
+      <div style={{ background: '#0d9488', padding: '16px 32px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📊</div>
+          <div>
+            <div style={{ fontSize: '20px', fontWeight: '800' }}>SaigonFlow Executive Dashboard</div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>Balanced Scorecard Framework • Tier 4 Build</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ background: 'rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '700' }}>LIVE OPS STATUS</div>
+          <div style={{ fontSize: '13px', fontWeight: '700' }}>523H0088 & 523H0113</div>
         </div>
       </div>
 
-      {/* Modals */}
-      {activeModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
           animation: 'fadeIn 0.2s ease-out'
         }}>
           <div style={{
@@ -125,85 +138,8 @@ export default function FleetManagerDashboard() {
                   <p style={{ fontSize: '14px', color: '#475569', margin: '0 0 8px 0', lineHeight: '1.5' }}>Select a format to download the current dashboard data. The report will include all active tabs.</p>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <button onClick={handleDownloadPDF} style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', padding: '20px', borderRadius: '16px', fontWeight: '700', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(239,68,68,0.1)' }}>
-                      <span style={{ fontSize: '32px' }}>📄</span> PDF Report
-                    </button>
-                    <button onClick={handleDownloadCSV} style={{ background: '#f0fdf4', color: '#10b981', border: '1px solid #bbf7d0', padding: '20px', borderRadius: '16px', fontWeight: '700', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(16,185,129,0.1)' }}>
-                      <span style={{ fontSize: '32px' }}>📊</span> CSV Data
-                    </button>
-                  </div>
-                </div>
-              )}
-              {activeModal === 'editVehicle' && editingVehicle && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Vehicle ID</div>
-                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>{editingVehicle.id}</div>
-                </div>
-                
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '8px' }}>Trạng thái hoạt động</label>
-                  <select 
-                    value={editingVehicle.status}
-                    onChange={(e) => setEditingVehicle({...editingVehicle, status: e.target.value})}
-                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white' }}
-                  >
-                    <option>In Use</option>
-                    <option>Available</option>
-                    <option>Charging</option>
-                    <option>Maintenance</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '8px' }}>Mức pin (%)</label>
-                  <input 
-                    type="text" 
-                    value={editingVehicle.power}
-                    onChange={(e) => setEditingVehicle({...editingVehicle, power: e.target.value})}
-                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-                  <button onClick={() => setActiveModal(null)} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '700', cursor: 'pointer' }}>Hủy</button>
-                  <button onClick={handleUpdateVehicle} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: '#0d9488', color: 'white', fontWeight: '700', cursor: 'pointer' }}>Lưu thay đổi</button>
-                </div>
-              </div>
-            )}
-            
-            {activeModal === 'settings' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
-                    <div>
-                      <div style={{ fontSize: '15px', color: '#1e293b', fontWeight: '700' }}>Auto-refresh Map</div>
-                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Update vehicle positions every 5s</div>
-                    </div>
-                    <div onClick={() => setAutoRefresh(!autoRefresh)} style={{ width: '44px', height: '24px', borderRadius: '12px', background: autoRefresh ? '#10b981' : '#cbd5e1', position: 'relative', cursor: 'pointer', transition: '0.2s' }}>
-                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2px', left: autoRefresh ? '22px' : '2px', transition: '0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
-                    <div>
-                      <div style={{ fontSize: '15px', color: '#1e293b', fontWeight: '700' }}>Dark Mode Theme</div>
-                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Enable dark color palette</div>
-                    </div>
-                    <div onClick={() => setIsDarkMode(!isDarkMode)} style={{ width: '44px', height: '24px', borderRadius: '12px', background: isDarkMode ? '#1e293b' : '#cbd5e1', position: 'relative', cursor: 'pointer', transition: '0.2s' }}>
-                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2px', left: isDarkMode ? '22px' : '2px', transition: '0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
-                    </div>
-                  </div>
-                  <button onClick={() => setActiveModal(null)} style={{ background: '#f8fafc', color: '#1e293b', border: '1px solid #e2e8f0', padding: '14px', borderRadius: '12px', fontWeight: '700', marginTop: '8px', cursor: 'pointer' }}>Close Settings</button>
-                </div>
-              )}
-              {activeModal === 'review' && selectedAlert && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ padding: '16px', background: selectedAlert.type === 'Critical' ? '#fef2f2' : '#eff6ff', borderRadius: '12px', border: `1px solid ${selectedAlert.type === 'Critical' ? '#fecaca' : '#bfdbfe'}` }}>
-                    <div style={{ fontWeight: '700', color: selectedAlert.color, marginBottom: '8px' }}>{selectedAlert.msg}</div>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>Received: {selectedAlert.time}</div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <button onClick={() => { setActiveModal(null); setToastMsg('Dispatching maintenance team...'); setShowToast(true); setTimeout(() => setShowToast(false), 3000); }} style={{ background: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>Dispatch Maintenance</button>
-                    <button onClick={() => { setActiveModal(null); setToastMsg('Alert acknowledged.'); setShowToast(true); setTimeout(() => setShowToast(false), 3000); }} style={{ background: '#f1f5f9', color: '#475569', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>Acknowledge</button>
-                  </div>
+                  <button onClick={handleDownloadPDF} style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', padding: '20px', borderRadius: '16px', fontWeight: '700', cursor: 'pointer' }}>PDF Report</button>
+                  <button onClick={handleDownloadCSV} style={{ background: '#f0fdf4', color: '#10b981', border: '1px solid #bbf7d0', padding: '20px', borderRadius: '16px', fontWeight: '700', cursor: 'pointer' }}>CSV Data</button>
                 </div>
               )}
             </div>
