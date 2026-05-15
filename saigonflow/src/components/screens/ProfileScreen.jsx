@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabaseClient'
 
 export default function ProfileScreen({ nav }) {
   const [activeModal, setActiveModal] = useState(null)
   const [user, setUser] = useState({
-    name: 'Minh Nguyễn',
-    email: 'minh.nguyen@email.com',
-    phone: '0987 654 321',
-    badge: 'Thành viên Hạng Vàng 🌟'
+    name: 'Loading...',
+    email: '...',
+    phone: '...',
+    badge: '...'
   })
   const [settings, setSettings] = useState({
     language: 'Tiếng Việt',
@@ -15,9 +16,37 @@ export default function ProfileScreen({ nav }) {
   })
   const [editForm, setEditForm] = useState({...user})
 
-  const handleSaveProfile = () => {
-    setUser(editForm)
-    setActiveModal(null)
+  useEffect(() => {
+    async function fetchProfile() {
+      const { data, error } = await supabase.from('profiles').select('*').limit(1).single()
+      if (data && !error) {
+        const mappedUser = {
+          name: data.full_name,
+          email: data.email,
+          phone: data.phone,
+          badge: data.badge
+        }
+        setUser(mappedUser)
+        setEditForm(mappedUser)
+      }
+    }
+    fetchProfile()
+  }, [])
+
+  const handleSaveProfile = async () => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: editForm.name,
+        email: editForm.email,
+        phone: editForm.phone
+      })
+      .eq('email', user.email)
+    
+    if (!error) {
+      setUser(editForm)
+      setActiveModal(null)
+    }
   }
 
   return (

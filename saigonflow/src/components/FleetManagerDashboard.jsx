@@ -24,19 +24,25 @@ export default function FleetManagerDashboard() {
   const [tempFilters, setTempFilters] = useState({ ebike: true, shuttle: true })
   const [liveStats, setLiveStats] = useState(stats)
   const [fleetStatus, setFleetStatus] = useState(initialFleet)
-
+  const [alerts, setAlerts] = useState([])
+ 
   useEffect(() => {
-    async function fetchFleet() {
-      const { data, error } = await supabase
-        .from('fleet')
-        .select('*')
+    async function fetchData() {
+      const { data: fleet } = await supabase.from('fleet').select('*')
+      if (fleet) setFleetStatus(fleet)
       
-      if (data && !error) {
-        setFleetStatus(data)
-      }
+      const { data: alertData } = await supabase.from('alerts').select('*').order('created_at', { ascending: false })
+      if (alertData) setAlerts(alertData)
     }
-    fetchFleet()
+    fetchData()
   }, [])
+
+  // Calculate battery distribution from live data
+  const batteryStats = {
+    excellent: fleetStatus.filter(v => parseInt(v.power) >= 80).length,
+    good: fleetStatus.filter(v => parseInt(v.power) >= 50 && parseInt(v.power) < 80).length,
+    critical: fleetStatus.filter(v => parseInt(v.power) < 50).length
+  }
 
   const filteredFleet = fleetStatus.filter(v => {
     if (v.type === 'E-Bike' && !filters.ebike) return false;
@@ -481,21 +487,31 @@ export default function FleetManagerDashboard() {
 
                 <div style={{ marginBottom: '24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                    <span style={{ color: '#64748b' }}>Excellent (80-100%)</span>
+                    <span style={{ fontWeight: '700', color: '#10b981' }}>{batteryStats.excellent} units ({Math.round(batteryStats.excellent/fleetStatus.length*100)}%)</span>
+                  </div>
+                  <div style={{ height: '12px', background: '#d1fae5', borderRadius: '6px', overflow: 'hidden' }}>
+                    <div style={{ width: `${batteryStats.excellent/fleetStatus.length*100}%`, height: '100%', background: '#0d9488' }} />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
                     <span style={{ color: '#64748b' }}>Good (50-79%)</span>
-                    <span style={{ fontWeight: '700', color: '#d97706' }}>186 bikes (20%)</span>
+                    <span style={{ fontWeight: '700', color: '#d97706' }}>{batteryStats.good} units ({Math.round(batteryStats.good/fleetStatus.length*100)}%)</span>
                   </div>
                   <div style={{ height: '12px', background: '#fef3c7', borderRadius: '6px', overflow: 'hidden' }}>
-                    <div style={{ width: '20%', height: '100%', background: '#1e293b' }} />
+                    <div style={{ width: `${batteryStats.good/fleetStatus.length*100}%`, height: '100%', background: '#d97706' }} />
                   </div>
                 </div>
 
                 <div style={{ marginBottom: '32px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
-                    <span style={{ color: '#64748b' }}>Critical (&lt; 50%)</span>
-                    <span style={{ fontWeight: '700', color: '#ef4444' }}>22 bikes (2%)</span>
+                    <span style={{ color: '#64748b' }}>Critical (< 50%)</span>
+                    <span style={{ fontWeight: '700', color: '#ef4444' }}>{batteryStats.critical} units ({Math.round(batteryStats.critical/fleetStatus.length*100)}%)</span>
                   </div>
                   <div style={{ height: '12px', background: '#fee2e2', borderRadius: '6px', overflow: 'hidden' }}>
-                    <div style={{ width: '2%', height: '100%', background: '#1e293b' }} />
+                    <div style={{ width: `${batteryStats.critical/fleetStatus.length*100}%`, height: '100%', background: '#ef4444' }} />
                   </div>
                 </div>
 
@@ -570,23 +586,26 @@ export default function FleetManagerDashboard() {
             <div className="tab-section" style={{ background: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #e2e8f0', marginBottom: activeTab === 'all' ? '40px' : '0' }}>
               <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '24px', color: '#1e293b' }}>System Alerts Log</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {alerts.map((alert, i) => (
-                  <div key={i} style={{ padding: '16px', background: alert.type === 'Critical' ? '#fef2f2' : alert.type === 'Warning' ? '#fffbeb' : '#eff6ff', border: `1px solid ${alert.type === 'Critical' ? '#fecaca' : alert.type === 'Warning' ? '#fde68a' : '#bfdbfe'}`, borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
-                        {alert.type === 'Critical' ? '❗' : alert.type === 'Warning' ? '⚠️' : 'ℹ️'}
+                {alerts.map((alert, i) => {
+                  const alertColor = alert.type === 'Critical Battery' ? '#ef4444' : alert.type === 'Maintenance Due' ? '#f59e0b' : '#3b82f6'
+                  return (
+                    <div key={i} style={{ padding: '16px', background: alert.type === 'Critical Battery' ? '#fef2f2' : alert.type === 'Maintenance Due' ? '#fffbeb' : '#eff6ff', border: `1px solid ${alert.type === 'Critical Battery' ? '#fecaca' : alert.type === 'Maintenance Due' ? '#fde68a' : '#bfdbfe'}`, borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+                          {alert.type === 'Critical Battery' ? '❗' : alert.type === 'Maintenance Due' ? '⚠️' : 'ℹ️'}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: '700', color: alertColor, fontSize: '14px' }}>{alert.type} Alert</div>
+                          <div style={{ color: '#64748b', fontSize: '13px' }}>{alert.msg} ({alert.vehicle_id})</div>
+                        </div>
                       </div>
-                      <div>
-                        <div style={{ fontWeight: '700', color: alert.color, fontSize: '14px' }}>{alert.type} Alert</div>
-                        <div style={{ color: '#64748b', fontSize: '13px' }}>{alert.msg}</div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: '600', color: '#94a3b8', fontSize: '12px' }}>{new Date(alert.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</div>
+                        <button onClick={() => handleAction('Review Alert', alert)} style={{ background: alertColor, border: 'none', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', marginTop: '8px', cursor: 'pointer' }}>Review</button>
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: '600', color: '#94a3b8', fontSize: '12px' }}>{alert.time}</div>
-                      <button onClick={() => handleAction('Review Alert', alert)} style={{ background: alert.color, border: 'none', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', marginTop: '8px', cursor: 'pointer' }}>Review</button>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}

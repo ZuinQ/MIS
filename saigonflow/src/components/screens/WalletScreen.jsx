@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
 export default function WalletScreen({ nav }) {
-  const [balance, setBalance] = useState(425000)
+  const [balance, setBalance] = useState(0)
   const [showToast, setShowToast] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
   const [transactions, setTransactions] = useState([
@@ -35,22 +35,33 @@ export default function WalletScreen({ nav }) {
     fetchTrips()
   }, [])
 
-  const handleTopUp = (amount) => {
-    setBalance(prev => prev + amount)
-    const newTx = {
-      id: Date.now(),
-      type: 'Quick Top-up',
-      detail: 'Momo Wallet',
-      date: 'Vừa xong',
-      amount: `+${amount.toLocaleString('vi-VN')}₫`,
-      icon: '💳',
-      color: '#3b82f6',
-      isPos: true
+  const handleTopUp = async (amount) => {
+    const { data: profile } = await supabase.from('profiles').select('balance, email').limit(1).single()
+    if (profile) {
+      const newBalance = profile.balance + amount
+      const { error } = await supabase
+        .from('profiles')
+        .update({ balance: newBalance })
+        .eq('email', profile.email)
+      
+      if (!error) {
+        setBalance(newBalance)
+        const newTx = {
+          id: Date.now(),
+          type: 'Quick Top-up',
+          detail: 'Momo Wallet',
+          date: 'Vừa xong',
+          amount: `+${amount.toLocaleString('vi-VN')}₫`,
+          icon: '💳',
+          color: '#3b82f6',
+          isPos: true
+        }
+        setTransactions(prev => [newTx, ...prev])
+        setToastMsg(`Đã nạp thành công ${amount.toLocaleString('vi-VN')}₫`)
+        setShowToast(true)
+        setTimeout(() => setShowToast(false), 2000)
+      }
     }
-    setTransactions(prev => [newTx, ...prev])
-    setToastMsg(`Đã nạp thành công ${amount.toLocaleString('vi-VN')}₫`)
-    setShowToast(true)
-    setTimeout(() => setShowToast(false), 2000)
   }
 
   const handleTransfer = () => {
