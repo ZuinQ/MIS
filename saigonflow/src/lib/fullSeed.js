@@ -6,9 +6,20 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
 
 async function seed() {
-  console.log('🚀 Bắt đầu đổ dữ liệu CHÍNH XÁC từ dashboardData.js...')
+  console.log('🚀 Bắt đầu đổ dữ liệu CHÍNH XÁC (Bản đầy đủ bao gồm Profile)...')
 
-  // 1. Dữ liệu Fleet (Xe)
+  // 1. Dữ liệu Profile (Người dùng)
+  const profiles = [
+    { 
+      full_name: "Minh Nguyễn", 
+      email: "minh.nguyen@email.com", 
+      phone: "0987 654 321", 
+      balance: 500000, 
+      badge: "Thành viên Hạng Vàng 🌟" 
+    }
+  ]
+
+  // 2. Dữ liệu Fleet (Xe)
   const fleet = [
     { id: "V0712", type: "E-Bike", status: "In Use", power: "68%", location: "Q1 - Bến Thành", lat: 10.7724, lng: 106.6981 },
     { id: "V1103", type: "E-Bike", status: "In Use", power: "85%", location: "Q1 - Nguyễn Huệ", lat: 10.7743, lng: 106.7042 },
@@ -17,17 +28,11 @@ async function seed() {
     { id: "V2080", type: "Shuttle Bus", status: "Charging", power: "11%", location: "Q1 - Bến xe buýt Hàm Nghi", lat: 10.7715, lng: 106.7046 }
   ]
 
-  // 2. Dữ liệu Alerts (Cảnh báo)
+  // 3. Dữ liệu Alerts (Cảnh báo)
   const alerts = [
     { vehicle_id: "V0321", type: "Critical Battery", msg: "Low Battery: E-Bike V0321 (13%)", status: "Pending" },
     { vehicle_id: "V2080", type: "Critical Battery", msg: "Low Battery: Shuttle Bus V2080 (11%)", status: "Pending" },
     { vehicle_id: "V0712", type: "Maintenance Due", msg: "Maintenance Due: V0712", status: "Resolved" }
-  ]
-
-  // 3. Dữ liệu Chuyến đi (Trips) - Tạo mẫu vài chuyến để hiển thị
-  const trips = [
-    { user_email: "minh.nguyen@email.com", vehicle_id: "V0712", origin: "Bến Thành", destination: "Nguyễn Huệ", status: "Completed", cost: 15000 },
-    { user_email: "minh.nguyen@email.com", vehicle_id: "V1103", origin: "Thảo Điền", destination: "Quận 1", status: "Completed", cost: 35000 }
   ]
 
   const call = async (table, body) => {
@@ -44,21 +49,21 @@ async function seed() {
   }
 
   try {
-    // Xóa sạch dữ liệu cũ trước khi nạp mới (chỉ áp dụng cho bảng có thể xóa)
     console.log('- Đang làm sạch dữ liệu cũ...')
     await fetch(`${supabaseUrl}/rest/v1/alerts?id=not.is.null`, { method: 'DELETE', headers: { 'apikey': supabaseAnonKey, 'Authorization': `Bearer ${supabaseAnonKey}` } })
     await fetch(`${supabaseUrl}/rest/v1/fleet?id=not.is.null`, { method: 'DELETE', headers: { 'apikey': supabaseAnonKey, 'Authorization': `Bearer ${supabaseAnonKey}` } })
+    // Không xóa profiles để tránh lỗi session, chỉ upsert (cập nhật nếu đã có)
 
-    console.log('- Đang nạp danh sách xe mới...')
+    console.log('- Đang nạp hồ sơ Minh Nguyễn...')
+    await call('profiles', profiles)
+
+    console.log('- Đang nạp danh sách xe...')
     await call('fleet', fleet)
     
-    console.log('- Đang nạp danh sách cảnh báo mới...')
+    console.log('- Đang nạp danh sách cảnh báo...')
     await call('alerts', alerts)
 
-    console.log('- Đang nạp lịch sử chuyến đi...')
-    await call('trips', trips)
-
-    console.log('✅ THÀNH CÔNG! Dữ liệu đã khớp 100% với file thiết kế của bạn.')
+    console.log('✅ XONG! Bây giờ bạn đã có thể đăng nhập bình thường.')
   } catch (e) {
     console.error('❌ Lỗi:', e.message)
   }
