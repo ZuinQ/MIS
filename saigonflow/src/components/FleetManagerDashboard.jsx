@@ -507,7 +507,7 @@ export default function FleetManagerDashboard() {
 
                 <div style={{ marginBottom: '32px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
-                    <span style={{ color: '#64748b' }}>Critical (< 50%)</span>
+                    <span style={{ color: '#64748b' }}>Critical (&lt; 50%)</span>
                     <span style={{ fontWeight: '700', color: '#ef4444' }}>{batteryStats.critical} units ({Math.round(batteryStats.critical/fleetStatus.length*100)}%)</span>
                   </div>
                   <div style={{ height: '12px', background: '#fee2e2', borderRadius: '6px', overflow: 'hidden' }}>
