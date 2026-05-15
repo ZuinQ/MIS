@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from '../../lib/supabaseClient'
 
 export default function TripPlannerScreen({ nav }) {
   const [isBooking, setIsBooking] = useState(false)
@@ -40,8 +41,21 @@ export default function TripPlannerScreen({ nav }) {
     }, 1500)
   }
 
-  const handleBook = () => {
+  const handleBook = async () => {
     setIsBooking(true)
+    
+    // Save to Supabase
+    const { error } = await supabase
+      .from('trips')
+      .insert([{
+        user_name: 'Minh Nguyễn',
+        origin: startLoc,
+        destination: endLoc,
+        status: 'Completed',
+        cost: '35,000₫',
+        vehicle_id: 'SF-101'
+      }])
+
     setTimeout(() => {
       setIsBooking(false)
       setShowToast(true)

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabaseClient'
 
 export default function WalletScreen({ nav }) {
   const [balance, setBalance] = useState(425000)
@@ -10,6 +11,29 @@ export default function WalletScreen({ nav }) {
     { id: 3, type: 'Top Up', detail: 'Momo Wallet', date: '01/05/2026', amount: '+100,000₫', icon: '💳', color: '#3b82f6', isPos: true },
     { id: 4, type: 'Shuttle Bus', detail: 'District 7 → District 1', date: '28/04/2026', amount: '-25,000₫', icon: '🚌', color: '#3b82f6' },
   ])
+
+  useEffect(() => {
+    async function fetchTrips() {
+      const { data, error } = await supabase
+        .from('trips')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (data && !error) {
+        const tripTransactions = data.map(t => ({
+          id: t.id,
+          type: 'Rental Trip',
+          detail: `${t.origin} → ${t.destination}`,
+          date: new Date(t.created_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
+          amount: `-${t.cost}`,
+          icon: t.vehicle_id.startsWith('SF-1') ? '⚡' : '🚌',
+          color: t.vehicle_id.startsWith('SF-1') ? '#10b981' : '#3b82f6'
+        }))
+        setTransactions(prev => [...tripTransactions, ...prev])
+      }
+    }
+    fetchTrips()
+  }, [])
 
   const handleTopUp = (amount) => {
     setBalance(prev => prev + amount)

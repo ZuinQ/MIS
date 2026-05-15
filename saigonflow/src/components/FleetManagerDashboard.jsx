@@ -17,6 +17,7 @@ export default function FleetManagerDashboard() {
   const [selectedAlert, setSelectedAlert] = useState(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState(true)
+  const [editingVehicle, setEditingVehicle] = useState(null)
   
   // Real functionality states
   const [filters, setFilters] = useState({ ebike: true, shuttle: true })
@@ -59,6 +60,31 @@ export default function FleetManagerDashboard() {
     }
     return () => clearInterval(interval);
   }, [autoRefresh]);
+
+  const handleUpdateVehicle = async () => {
+    if (!editingVehicle) return
+    
+    const { error } = await supabase
+      .from('fleet')
+      .update({ 
+        status: editingVehicle.status,
+        power: editingVehicle.power 
+      })
+      .eq('id', editingVehicle.id)
+
+    if (!error) {
+      setToastMsg(`Cập nhật xe ${editingVehicle.id} thành công!`)
+      setShowToast(true)
+      setTimeout(() => setShowToast(false), 2000)
+      
+      // Refresh local data
+      const { data } = await supabase.from('fleet').select('*')
+      if (data) setFleetStatus(data)
+      setActiveModal(null)
+    } else {
+      alert('Lỗi khi cập nhật: ' + error.message)
+    }
+  }
 
   const handleDownloadCSV = () => {
     const headers = ['ID', 'Type', 'Status', 'Power', 'Location', 'Lat', 'Lng'];
@@ -119,6 +145,9 @@ export default function FleetManagerDashboard() {
     } else if (action === 'Review Alert') {
       setSelectedAlert(payload)
       setActiveModal('review')
+    } else if (action === 'Manage Vehicle') {
+      setEditingVehicle(payload)
+      setActiveModal('editVehicle')
     } else if (action === 'Zoom In' || action === 'Zoom Out') {
       setToastMsg(`Map ${action} applied`)
       setShowToast(true)
@@ -437,10 +466,7 @@ export default function FleetManagerDashboard() {
                         </td>
                         <td style={{ padding: '12px', fontSize: '12px', color: '#64748b' }}>{v.location}</td>
                         <td style={{ padding: '12px' }}>
-                          <button onClick={() => {
-                            setSelectedAlert({ msg: `Manage vehicle ${v.id}`, type: 'Info' });
-                            setActiveModal('review');
-                          }} style={{ background: '#f1f5f9', border: 'none', color: '#3b82f6', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Manage</button>
+                          <button onClick={() => handleAction('Manage Vehicle', v)} style={{ background: '#f1f5f9', border: 'none', color: '#3b82f6', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Manage</button>
                         </td>
                       </tr>
                     ))}
@@ -648,7 +674,45 @@ export default function FleetManagerDashboard() {
                   </div>
                 </div>
               )}
-              {activeModal === 'settings' && (
+              {activeModal === 'editVehicle' && editingVehicle && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Vehicle ID</div>
+                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>{editingVehicle.id}</div>
+                </div>
+                
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '8px' }}>Trạng thái hoạt động</label>
+                  <select 
+                    value={editingVehicle.status}
+                    onChange={(e) => setEditingVehicle({...editingVehicle, status: e.target.value})}
+                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white' }}
+                  >
+                    <option>In Use</option>
+                    <option>Available</option>
+                    <option>Charging</option>
+                    <option>Maintenance</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '8px' }}>Mức pin (%)</label>
+                  <input 
+                    type="text" 
+                    value={editingVehicle.power}
+                    onChange={(e) => setEditingVehicle({...editingVehicle, power: e.target.value})}
+                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                  <button onClick={() => setActiveModal(null)} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '700', cursor: 'pointer' }}>Hủy</button>
+                  <button onClick={handleUpdateVehicle} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: '#0d9488', color: 'white', fontWeight: '700', cursor: 'pointer' }}>Lưu thay đổi</button>
+                </div>
+              </div>
+            )}
+            
+            {activeModal === 'settings' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
                     <div>
