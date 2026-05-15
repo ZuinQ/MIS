@@ -32,23 +32,24 @@ export default function AIAssistantScreen({ nav }) {
     setTimeout(() => {
       setIsTyping(false)
       
-      let botResponse = "Hệ thống đã ghi nhận yêu cầu của bạn. Bạn cần hỗ trợ thêm gì không?";
-      let hasAction = false;
       const lowerInput = userText.toLowerCase();
+      let botResponse = "";
+      let hasAction = false;
 
-      if (lowerInput.includes("kẹt xe") || lowerInput.includes("kẹt")) {
-        botResponse = "Dựa trên dữ liệu giao thông thời gian thực, đường Nguyễn Tất Thành và cầu Sài Gòn đang ùn tắc nhẹ. Bạn nên chọn đi Metro Line 1 kết hợp E-bike để tiết kiệm thời gian nhất nhé.";
-      } else if (lowerInput.includes("tiền") || lowerInput.includes("nạp") || lowerInput.includes("số dư") || lowerInput.includes("ví")) {
-        botResponse = "Ví FlowPass của bạn hiện đang còn 425,000₫. Đủ để thực hiện khoảng 20 chuyến E-bike ngắn. Bạn có muốn nạp thêm qua Momo không?";
-      } else if (lowerInput.includes("trạm") || lowerInput.includes("gần nhất") || lowerInput.includes("ở đâu")) {
-        botResponse = "Trạm E-bike gần bạn nhất là Trạm 042 (cách 50m). Hiện tại đang có sẵn 3 xe đầy pin (trên 85%). Mình giữ một xe cho bạn nhé?";
+      // Smart Response Logic
+      if (lowerInput.includes("kẹt xe") || lowerInput.includes("tắc đường") || lowerInput.includes("ùn tắc")) {
+        botResponse = "Dựa trên dữ liệu giao thông thời gian thực, các trục đường chính như Nguyễn Huệ và cầu Sài Gòn đang có mật độ xe cao. Tôi khuyên bạn nên sử dụng Metro Line 1 kết hợp với xe đạp điện E-bike để về nhà nhanh hơn khoảng 15 phút.";
+      } else if (lowerInput.includes("tiền") || lowerInput.includes("ví") || lowerInput.includes("số dư") || lowerInput.includes("nạp")) {
+        botResponse = "FlowPass của bạn hiện có đủ số dư cho các chuyến hành trình sắp tới. Bạn có muốn tôi thiết lập tự động nạp tiền khi số dư dưới 50,000₫ không? Điều này sẽ giúp bạn không bao giờ bị gián đoạn hành trình.";
+      } else if (lowerInput.includes("xe") || lowerInput.includes("ebike") || lowerInput.includes("đặt")) {
+        botResponse = "Tôi đã tìm thấy một chiếc E-bike (Mã #V0712) đầy pin cách bạn 3 phút đi bộ. Bạn có muốn tôi giữ xe trong 10 phút để bạn di chuyển đến đó không?";
         hasAction = true;
-      } else if (lowerInput.includes("xe buýt") || lowerInput.includes("shuttle") || lowerInput.includes("bus")) {
-        botResponse = "Tuyến Shuttle S012 (Quận 7 - Quận 1) sẽ đến trạm gần bạn trong 5 phút nữa. Trên xe hiện còn 8 chỗ trống có máy lạnh. Bạn có muốn đặt vé (45,000₫) không?";
-      } else if (lowerInput.includes("chào") || lowerInput.includes("hi") || lowerInput.includes("hello")) {
-        botResponse = "Chào bạn! Flow AI có thể giúp gì cho bạn hôm nay? (Ví dụ: tìm đường, kiểm tra số dư, tìm xe E-bike gần nhất...)";
-      } else if (lowerInput.includes("cảm ơn") || lowerInput.includes("thank")) {
-        botResponse = "Không có gì! Chúc bạn một chuyến đi vui vẻ cùng SaigonFlow 🌿";
+      } else if (lowerInput.includes("lộ trình") || lowerInput.includes("đi đâu")) {
+        botResponse = "Hôm nay thời tiết rất đẹp cho một chuyến đi xanh! Tôi đề xuất lộ trình tham quan: Ga Bến Thành -> Dinh Độc Lập -> Hồ Con Rùa hoàn toàn bằng xe điện. Bạn sẽ giảm được 2kg khí thải CO2 cho thành phố đấy!";
+      } else if (lowerInput.includes("chào") || lowerInput.includes("hello") || lowerInput.includes("hi")) {
+        botResponse = "Chào bạn! Rất vui được gặp lại. Tôi có thể giúp bạn lên kế hoạch di chuyển xanh, kiểm tra ví hoặc tìm trạm sạc E-bike gần nhất. Bạn muốn bắt đầu từ đâu?";
+      } else {
+        botResponse = "Đây là một ý tưởng hay! Theo phân tích dữ liệu của SaigonFlow, hành vi di chuyển này rất phù hợp với lối sống bền vững. Bạn có muốn tôi tối ưu hóa lộ trình này để tiết kiệm năng lượng hơn không?";
       }
 
       setMessages(prev => [...prev, { 

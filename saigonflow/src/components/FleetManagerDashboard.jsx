@@ -110,15 +110,20 @@ export default function FleetManagerDashboard() {
           <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
             {activeTab === 'financial' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px' }}>
                   <div className="stat-card"><div>Total Revenue</div><div style={{ fontSize: '24px', fontWeight: '800' }}>321.8M₫</div></div>
                   <div className="stat-card"><div>Avg Fare</div><div style={{ fontSize: '24px', fontWeight: '800' }}>24.5k₫</div></div>
                   <div className="stat-card"><div>Margin</div><div style={{ fontSize: '24px', fontWeight: '800' }}>34.2%</div></div>
                   <div className="stat-card"><div>ROI</div><div style={{ fontSize: '24px', fontWeight: '800', color: '#10b981' }}>145%</div></div>
+                  <div className="stat-card" style={{ background: 'linear-gradient(135deg, #064e3b 0%, #0d9488 100%)', color: 'white' }}>
+                    <div style={{ fontSize: '12px', opacity: 0.8 }}>☘️ CO2 Savings</div>
+                    <div style={{ fontSize: '24px', fontWeight: '800' }}>1,240kg</div>
+                    <div style={{ fontSize: '10px', marginTop: '4px' }}>↑ 12% vs Target</div>
+                  </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '24px' }}>
                   <div className="stat-card">
-                    <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '24px' }}>Top Vehicles</h3>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '24px' }}>Top Vehicles Revenue</h3>
                     <div style={{ height: '300px' }}>
                       <ResponsiveContainer><BarChart data={financialData} layout="vertical"><XAxis type="number" hide /><YAxis dataKey="name" type="category" width={100} /><Tooltip /><Bar dataKey="revenue" fill="#0d9488" radius={[0,4,4,0]} /></BarChart></ResponsiveContainer>
                     </div>
@@ -129,18 +134,44 @@ export default function FleetManagerDashboard() {
                       <ResponsiveContainer><PieChart><Pie data={[{name:'E-Bike',v:65},{name:'Bus',v:35}]} dataKey="v" innerRadius={60} outerRadius={80}><Cell fill="#0d9488"/><Cell fill="#3b82f6"/></Pie><Tooltip/><Legend/></PieChart></ResponsiveContainer>
                     </div>
                   </div>
+                  <div className="stat-card" style={{ border: '1px solid #fecaca' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#ef4444', marginBottom: '16px' }}>📉 Underperforming (Redistribution Needed)</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {[
+                        { id: 'V0321', rev: '1.2M', reason: 'Low Demand' },
+                        { id: 'V0884', rev: '0.8M', reason: 'Maintenance' },
+                        { id: 'V1022', rev: '2.1M', reason: 'Competition' }
+                      ].map(v => (
+                        <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: '#fff1f2', borderRadius: '8px', fontSize: '12px' }}>
+                          <span style={{ fontWeight: '700' }}>{v.id}</span>
+                          <span style={{ color: '#ef4444' }}>{v.rev}₫</span>
+                        </div>
+                      ))}
+                    </div>
+                    <button style={{ width: '100%', marginTop: '20px', padding: '10px', borderRadius: '8px', border: '1px solid #fecaca', background: 'white', color: '#ef4444', fontWeight: '700', cursor: 'pointer' }}>Action Plan →</button>
+                  </div>
                 </div>
               </div>
             )}
 
             {activeTab === 'customer' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
-                <div className="stat-card"><h3>Weather Impact</h3><div style={{ height: '250px' }}><ResponsiveContainer><BarChart data={weatherData}><XAxis dataKey="condition"/><YAxis hide/><Tooltip/><Bar dataKey="trips">{weatherData.map((e,i)=><Cell key={i} fill={e.color}/>)}</Bar></BarChart></ResponsiveContainer></div></div>
-                <div className="stat-card" style={{ textAlign: 'center' }}><h3>Churn Prediction</h3><div style={{ fontSize: '48px', fontWeight: '800', color: '#ef4444', margin: '40px 0' }}>4.2%</div><p style={{ color: '#64748b' }}>Projected monthly churn</p></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '24px' }}>
                 <div className="stat-card">
-                  <h3>Engagement</h3>
-                  {['Power','Regular','Casual'].map((c,i)=>(
-                    <div key={i} style={{ marginTop: '16px' }}><div>{c}</div><div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px' }}><div style={{ width: `${40-i*10}%`, height: '100%', background: '#0d9488', borderRadius: '4px' }}/></div></div>
+                  <h3>Weather Impact Analysis</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', background: '#fffbeb', borderRadius: '12px', marginBottom: '16px', border: '1px solid #fef3c7' }}>
+                    <div style={{ fontSize: '24px' }}>⚠️</div>
+                    <div style={{ fontSize: '12px', color: '#92400e' }}><b>Rain Warning:</b> Expect 15% drop in E-bike demand in District 1. Increasing Shuttle Bus frequency recommended.</div>
+                  </div>
+                  <div style={{ height: '200px' }}><ResponsiveContainer><BarChart data={weatherData}><XAxis dataKey="condition"/><YAxis hide/><Tooltip/><Bar dataKey="trips">{weatherData.map((e,i)=><Cell key={i} fill={e.color}/>)}</Bar></BarChart></ResponsiveContainer></div>
+                </div>
+                <div className="stat-card" style={{ textAlign: 'center' }}><h3>Churn Prediction</h3><div style={{ fontSize: '48px', fontWeight: '800', color: '#ef4444', margin: '40px 0' }}>4.2%</div><p style={{ color: '#64748b', fontSize: '12px' }}>AI recommendation: Send 10% voucher to 'Casual' users</p></div>
+                <div className="stat-card">
+                  <h3>User Segmentation</h3>
+                  {[{l:'Power Users',v:45,c:'#0d9488'},{l:'Regulars',v:35,c:'#3b82f6'},{l:'Casuals',v:20,c:'#94a3b8'}].map((s,i)=>(
+                    <div key={i} style={{ marginTop: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}><span>{s.l}</span><span>{s.v}%</span></div>
+                      <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px' }}><div style={{ width: `${s.v}%`, height: '100%', background: s.c, borderRadius: '4px' }}/></div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -148,21 +179,41 @@ export default function FleetManagerDashboard() {
 
             {activeTab === 'internal' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
-                <div className="stat-card"><h3>Maintenance Risk</h3><div style={{ height: '250px' }}><ResponsiveContainer><PieChart><Pie data={maintenanceData} dataKey="value" innerRadius={60} outerRadius={80}>{maintenanceData.map((e,i)=><Cell key={i} fill={e.color}/>)}</Pie><Tooltip/><Legend/></PieChart></ResponsiveContainer></div></div>
-                <div className="stat-card"><h3>Peak Hour Utilization</h3><div style={{ height: '300px' }}><ResponsiveContainer><AreaChart data={[{n:'08:00',u:92},{n:'12:00',u:45},{n:'18:00',u:95}]}><XAxis dataKey="n"/><YAxis/><Tooltip/><Area type="monotone" dataKey="u" fill="#0d9488" stroke="#0d9488" fillOpacity={0.1}/></AreaChart></ResponsiveContainer></div></div>
+                <div className="stat-card">
+                  <h3>Fleet Health Index</h3>
+                  <div style={{ position: 'relative', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '42px', fontWeight: '800', color: '#10b981' }}>94/100</div>
+                        <div style={{ fontSize: '12px', color: '#64748b' }}>Excellent Status</div>
+                     </div>
+                  </div>
+                  <div style={{ height: '100px' }}><ResponsiveContainer><PieChart><Pie data={maintenanceData} dataKey="value" innerRadius={35} outerRadius={45}>{maintenanceData.map((e,i)=><Cell key={i} fill={e.color}/>)}</Pie><Tooltip/></PieChart></ResponsiveContainer></div>
+                </div>
+                <div className="stat-card"><h3>Live Utilization Flow</h3><div style={{ height: '300px' }}><ResponsiveContainer><AreaChart data={[{n:'08:00',u:92},{n:'10:00',u:65},{n:'12:00',u:45},{n:'14:00',u:55},{n:'16:00',u:75},{n:'18:00',u:95}]}><XAxis dataKey="n"/><YAxis/><Tooltip/><Area type="monotone" dataKey="u" fill="#0d9488" stroke="#0d9488" fillOpacity={0.1}/></AreaChart></ResponsiveContainer></div></div>
               </div>
             )}
 
             {activeTab === 'knowledge' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
                 <div style={{ background: '#1e293b', borderRadius: '20px', padding: '32px', color: 'white' }}>
-                  <h3>✨ AI Demand Forecast</h3>
-                  <div style={{ height: '300px', marginTop: '20px' }}><ResponsiveContainer><LineChart data={[{n:'Mon',a:420,f:420},{n:'Wed',a:480,f:470},{n:'Fri',f:550}]}><XAxis dataKey="n" stroke="white"/><YAxis stroke="white"/><Tooltip/><Line dataKey="a" stroke="#10b981" strokeWidth={4}/><Line dataKey="f" stroke="#94a3b8" strokeDasharray="5 5"/></LineChart></ResponsiveContainer></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <h3 style={{ margin: 0 }}>✨ AI Demand Prediction (Next 48h)</h3>
+                    <div style={{ background: 'rgba(16,185,129,0.2)', color: '#10b981', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '800' }}>ACCURACY: 98.2%</div>
+                  </div>
+                  <div style={{ height: '300px' }}><ResponsiveContainer><LineChart data={[{n:'Mon',a:420,f:420},{n:'Tue',a:450,f:460},{n:'Wed',a:480,f:470},{n:'Thu',f:510},{n:'Fri',f:550}]}><XAxis dataKey="n" stroke="rgba(255,255,255,0.5)"/><YAxis stroke="rgba(255,255,255,0.5)"/><Tooltip contentStyle={{background:'#1e293b', border:'1px solid #334155'}}/><Line dataKey="a" name="Actual" stroke="#10b981" strokeWidth={4} dot={{fill:'#10b981'}}/><Line dataKey="f" name="Forecast" stroke="rgba(255,255,255,0.3)" strokeDasharray="5 5"/></LineChart></ResponsiveContainer></div>
                 </div>
                 <div className="stat-card">
-                  <h3>Strategy Goals</h3>
-                  {[{l:'AI Efficiency',v:75},{l:'Net Zero',v:100}].map((s,i)=>(
-                    <div key={i} style={{ marginTop: '20px' }}><div>{s.l}</div><div style={{ height: '8px', background: '#f1f5f9' }}><div style={{ width: `${s.v}%`, height: '100%', background: '#0d9488' }}/></div></div>
+                  <h3>Strategic Objectives (OKRs)</h3>
+                  {[
+                    {l:'AI-Driven Optimization',v:75, t:'Target: 90%'},
+                    {l:'Carbon Neutrality',v:100, t:'Target: 100%'},
+                    {l:'Operational ROI',v:85, t:'Target: 95%'}
+                  ].map((s,i)=>(
+                    <div key={i} style={{ marginTop: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '700', marginBottom: '6px' }}><span>{s.l}</span><span style={{ color: '#0d9488' }}>{s.v}%</span></div>
+                      <div style={{ height: '10px', background: '#f1f5f9', borderRadius: '5px' }}><div style={{ width: `${s.v}%`, height: '100%', background: '#0d9488', borderRadius: '5px' }}/></div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>{s.t}</div>
+                    </div>
                   ))}
                 </div>
               </div>
