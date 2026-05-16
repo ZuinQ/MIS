@@ -216,6 +216,138 @@ export default function FleetManagerDashboard() {
     </div>
   );
 
+  const renderOperations = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Top Row: Operational Gauges */}
+      <div className="pdf-grid-row" style={{ gap: '20px' }}>
+         <div className="chart-container" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '15px', padding: '15px' }}>
+            <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🚲</div>
+            <div>
+              <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold' }}>E-BIKES AVAILABLE</div>
+              <div style={{ fontSize: '20px', fontWeight: '800' }}>24/30</div>
+              <div style={{ height: '4px', width: '100px', background: '#e2e8f0', marginTop: '4px', borderRadius: '2px' }}>
+                <div style={{ height: '100%', width: '80%', background: '#10b981', borderRadius: '2px' }} />
+              </div>
+            </div>
+         </div>
+         <div className="chart-container" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '15px', padding: '15px' }}>
+            <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🚐</div>
+            <div>
+              <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold' }}>SHUTTLES IN-SERVICE</div>
+              <div style={{ fontSize: '20px', fontWeight: '800' }}>8/10</div>
+              <div style={{ height: '4px', width: '100px', background: '#e2e8f0', marginTop: '4px', borderRadius: '2px' }}>
+                <div style={{ height: '100%', width: '80%', background: '#3b82f6', borderRadius: '2px' }} />
+              </div>
+            </div>
+         </div>
+         <div className="chart-container" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '15px', padding: '15px' }}>
+            <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>⚡</div>
+            <div>
+              <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold' }}>AVG. FLEET POWER</div>
+              <div style={{ fontSize: '20px', fontWeight: '800' }}>84.5%</div>
+              <div style={{ height: '4px', width: '100px', background: '#e2e8f0', marginTop: '4px', borderRadius: '2px' }}>
+                <div style={{ height: '100%', width: '84%', background: '#f59e0b', borderRadius: '2px' }} />
+              </div>
+            </div>
+         </div>
+      </div>
+
+      {/* Middle Row: Map & Alerts */}
+      <div className="pdf-grid-row" style={{ height: '600px', gap: '20px' }}>
+        {/* Left Column: Live Map */}
+        <div className="pdf-col-3" style={{ height: '100%', background: 'white', borderRadius: '4px', overflow: 'hidden', border: '1px solid #e2e8f0', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '15px', left: '60px', zIndex: 1000, background: 'rgba(255,255,255,0.9)', padding: '8px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', fontWeight: 'bold' }}>
+            🟢 SYSTEM STATUS: OPERATIONAL
+          </div>
+          <MapContainer center={[10.7769, 106.7009]} zoom={13} style={{ height: '100%', width: '100%' }}>
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <MapResizer activeTab={activeTab} />
+            {liveVehicles.map(v => (
+              <Marker key={v.id} position={[v.lat, v.lng]}>
+                <Popup><b>{v.id}</b><br/>Type: {v.type}<br/>Battery: {v.power}%<br/>Status: {v.status}</Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
+
+        {/* Right Column: Alerts & Live Feed */}
+        <div className="pdf-col-1" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
+          {/* Critical System Alerts */}
+          <div className="chart-container" style={{ flex: 1, padding: '15px', overflowY: 'auto' }}>
+            <div className="chart-title" style={{ fontSize: '12px', marginBottom: '15px', display: 'flex', justifyContent: 'space-between' }}>
+              <span>SYSTEM ALERTS</span>
+              <span style={{ color: '#ef4444' }}>● LIVE</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {alerts.map(alert => (
+                <div key={alert.id} style={{ padding: '10px', background: alert.level === 'Critical' ? '#fff1f2' : '#fffbeb', borderLeft: `4px solid ${alert.level === 'Critical' ? '#ef4444' : '#f59e0b'}`, borderRadius: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 'bold' }}>
+                    <span style={{ color: alert.level === 'Critical' ? '#be123c' : '#b45309' }}>{alert.type}</span>
+                    <span style={{ color: '#64748b' }}>{alert.time}</span>
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', marginTop: '4px' }}>{alert.msg}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Live Activity Feed */}
+          <div className="chart-container" style={{ flex: 1, padding: '15px', overflowY: 'auto', background: '#1e293b', color: 'white' }}>
+            <div className="chart-title" style={{ fontSize: '12px', marginBottom: '15px', color: '#94a3b8' }}>LIVE ACTIVITY LOG</div>
+            <div style={{ fontFamily: 'monospace', fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+               <div style={{ color: '#10b981' }}>[14:28:01] Trip #T942 Started - User #U102</div>
+               <div style={{ color: '#3b82f6' }}>[14:27:45] Vehicle #V0882 Arrived @ Ga Ben Thanh</div>
+               <div style={{ color: '#f59e0b' }}>[14:26:12] Battery Warning: Vehicle #V0113 @ 18%</div>
+               <div style={{ color: '#94a3b8' }}>[14:25:30] System Scan: 40/40 units pinged.</div>
+               <div style={{ color: '#10b981' }}>[14:24:05] FlowPass Top-up: 200,000 VND - User #U452</div>
+               <div style={{ color: '#3b82f6' }}>[14:23:11] Shuttle #S01 dispatched to Thao Dien</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Row: Detailed Vehicle Status Table */}
+      <div className="chart-container">
+        <div className="chart-title" style={{ fontSize: '14px' }}>Real-time Fleet Status Detailed Table</div>
+        <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', marginTop: '10px' }}>
+          <thead>
+            <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9', color: '#64748b' }}>
+              <th style={{ padding: '12px' }}>VEHICLE ID</th>
+              <th>TYPE</th>
+              <th>BATTERY</th>
+              <th>CURRENT LOCATION</th>
+              <th>STATUS</th>
+              <th>LAST CONNECT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {liveVehicles.map((v, i) => (
+              <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '12px', fontWeight: 'bold' }}>{v.id}</td>
+                <td>{v.type}</td>
+                <td>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '3px' }}>
+                        <div style={{ height: '100%', width: `${v.power}%`, background: v.power < 20 ? '#ef4444' : '#10b981', borderRadius: '3px' }} />
+                      </div>
+                      <span>{v.power}%</span>
+                   </div>
+                </td>
+                <td style={{ color: '#64748b' }}>{v.lat.toFixed(4)}, {v.lng.toFixed(4)}</td>
+                <td>
+                  <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold', background: v.status === 'In-use' ? '#dcfce7' : '#f1f5f9', color: v.status === 'In-use' ? '#166534' : '#64748b' }}>
+                    {v.status.toUpperCase()}
+                  </span>
+                </td>
+                <td style={{ color: '#94a3b8' }}>2s ago</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }}>
       <style>{`
@@ -240,7 +372,7 @@ export default function FleetManagerDashboard() {
       <div style={{ background: 'white', padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
         <h1 style={{ fontSize: '18px', fontWeight: '800', color: '#0d9488', margin: 0 }}>SaigonFlow | BI Analytics</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
-          {['financial', 'customer', 'internal', 'growth', 'map'].map(t => (
+          {['operations', 'financial', 'customer', 'internal', 'growth'].map(t => (
             <button key={t} onClick={() => setActiveTab(t)} style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: activeTab === t ? '#3b82f6' : 'transparent', color: activeTab === t ? 'white' : '#64748b', fontWeight: '600', cursor: 'pointer', transition: '0.2s' }}>{t.toUpperCase()}</button>
           ))}
           <button onClick={handleDownloadPDF} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #3b82f6', color: '#3b82f6', background: 'white', fontWeight: '600', cursor: 'pointer' }}>EXPORT REPORT</button>
@@ -250,27 +382,14 @@ export default function FleetManagerDashboard() {
       <div id="dashboard-export-area" style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           
+          {(activeTab === 'operations' || activeTab === 'all_for_pdf') && renderOperations()}
           {(activeTab === 'financial' || activeTab === 'all_for_pdf') && renderFinancial()}
           {(activeTab === 'customer' || activeTab === 'all_for_pdf') && renderCustomer()}
           {(activeTab === 'internal' || activeTab === 'all_for_pdf') && renderInternal()}
           {(activeTab === 'growth' || activeTab === 'all_for_pdf') && renderGrowth()}
 
-          {activeTab === 'map' && (
-            <div style={{ height: '700px', background: 'white', borderRadius: '4px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-               <MapContainer center={[10.7769, 106.7009]} zoom={13} style={{ height: '100%', width: '100%' }}>
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <MapResizer activeTab={activeTab} />
-                  {liveVehicles.map(v => (
-                    <Marker key={v.id} position={[v.lat, v.lng]}>
-                      <Popup><b>{v.id}</b><br/>Battery: {v.power}%<br/>Status: {v.status}</Popup>
-                    </Marker>
-                  ))}
-               </MapContainer>
-            </div>
-          )}
-
         </div>
       </div>
     </div>
-  )
+  );
 }
