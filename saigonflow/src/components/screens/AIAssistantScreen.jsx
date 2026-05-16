@@ -75,6 +75,8 @@ export default function AIAssistantScreen({ nav }) {
       // 5. Handle Booking
       else if (lowerInput.includes("đặt") || lowerInput.includes("đồng ý") || lowerInput.includes("ok")) {
         botResponse = "Tuyệt vời! Mình đã đặt vé Metro và giữ xe E-bike cho bạn. Mã QR nhận xe đã được gửi vào ví FlowPass. Chúc bạn một chuyến đi xanh và vui vẻ! 🌿";
+        setMessages(prev => [...prev, { role: 'bot', text: botResponse, isBooking: true }])
+        return; // Avoid double message setting below
       }
       // Fallbacks
       else if (lowerInput.includes("ví") || lowerInput.includes("tiền")) {
@@ -154,6 +156,21 @@ export default function AIAssistantScreen({ nav }) {
             }}>
               {msg.text}
               
+              {msg.isBooking && (
+                <div style={{ marginTop: '12px', background: '#f8fafc', border: '1px dashed #10b981', borderRadius: '12px', padding: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '700' }}>SAIGONFLOW TICKET</span>
+                    <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '700' }}>SUCCESS</span>
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: '800', color: '#1e293b' }}>{activeRoute?.from || 'Ga Bến Thành'} → {activeRoute?.to || 'Thảo Điền'}</div>
+                  <div style={{ fontSize: '11px', color: '#64748b', margin: '4px 0' }}>Vehicle: Metro Line 1 + E-bike #E723</div>
+                  <div style={{ marginTop: '10px', textAlign: 'center', background: 'white', padding: '10px', borderRadius: '8px' }}>
+                    <div style={{ width: '80px', height: '80px', background: '#f1f5f9', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '30px' }}>📱</div>
+                    <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>Scan at Station Gate</div>
+                  </div>
+                </div>
+              )}
+
               {msg.hasAction && (
                 <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
                   <button onClick={() => handleSend('Đồng ý đặt.')} style={{ background: '#d1fae5', color: '#059669', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>Đồng ý đặt</button>
