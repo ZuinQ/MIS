@@ -348,6 +348,85 @@ export default function FleetManagerDashboard() {
     </div>
   );
 
+  const renderStrategy = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      {/* Part 1: Strategy Map (Conceptual Flow) */}
+      <div className="chart-container">
+        <div className="chart-title">SaigonFlow Strategy Map (BSC Framework)</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '40px 0', position: 'relative' }}>
+          {/* Connecting Lines */}
+          <div style={{ position: 'absolute', top: '50%', left: '10%', right: '10%', height: '2px', background: '#e2e8f0', zIndex: 0 }} />
+          
+          {[
+            { step: 'GROWTH', color: '#1e3a8a', label: 'AI & Talent' },
+            { step: 'PROCESS', color: '#3b82f6', label: 'Fleet Rebalance' },
+            { step: 'CUSTOMER', color: '#10b981', label: 'Commuter Intimacy' },
+            { step: 'FINANCIAL', color: '#0d9488', label: 'Revenue Growth' }
+          ].map((s, i) => (
+            <div key={i} style={{ zIndex: 1, textAlign: 'center', width: '180px' }}>
+              <div style={{ width: '80px', height: '80px', background: s.color, borderRadius: '50%', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                {s.step}
+              </div>
+              <div style={{ marginTop: '12px', fontSize: '14px', fontWeight: 'bold', color: '#475569' }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Part 2: OKR Progress Tracking */}
+      <div className="pdf-grid-row">
+        <div className="pdf-col-2">
+          <div className="chart-container">
+            <div className="chart-title">Executive OKR Progress Tracking</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+              {strategicOKRs.map((okr, i) => (
+                <div key={i}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{okr.label}</span>
+                    <span style={{ color: '#3b82f6', fontWeight: 'bold' }}>{okr.progress}%</span>
+                  </div>
+                  <div style={{ height: '12px', background: '#f1f5f9', borderRadius: '6px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${okr.progress}%`, background: 'linear-gradient(90deg, #3b82f6, #1e3a8a)', borderRadius: '6px' }} />
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{okr.target}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Part 3: Long-term Action Plan Table */}
+        <div className="pdf-col-2">
+          <div className="chart-container">
+            <div className="chart-title">3-Year Strategic Action Plan (2026-2028)</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9', color: '#64748b' }}>
+                  <th style={{ padding: '10px' }}>Phase</th>
+                  <th>Core Focus</th>
+                  <th>Prescriptive Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { p: 'Phase 1', f: 'Optimization', a: 'Deploy Dynamic Rebalancing via Dashboard', c: '#dcfce7' },
+                  { p: 'Phase 2', f: 'Expansion', a: 'Metro Line 1 API Integration', c: '#dbeafe' },
+                  { p: 'Phase 3', f: 'Ecosystem', a: 'Open MaaS Partnership Program', c: '#fef3c7' }
+                ].map((row, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '15px 10px' }}><span style={{ padding: '4px 8px', borderRadius: '4px', background: row.c, fontWeight: 'bold' }}>{row.p}</span></td>
+                    <td style={{ fontWeight: '600' }}>{row.f}</td>
+                    <td style={{ color: '#64748b' }}>{row.a}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }}>
       <style>{`
@@ -372,7 +451,7 @@ export default function FleetManagerDashboard() {
       <div style={{ background: 'white', padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
         <h1 style={{ fontSize: '18px', fontWeight: '800', color: '#0d9488', margin: 0 }}>SaigonFlow | BI Analytics</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
-          {['operations', 'financial', 'customer', 'internal', 'growth'].map(t => (
+          {['operations', 'financial', 'customer', 'internal', 'growth', 'strategy'].map(t => (
             <button key={t} onClick={() => setActiveTab(t)} style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: activeTab === t ? '#3b82f6' : 'transparent', color: activeTab === t ? 'white' : '#64748b', fontWeight: '600', cursor: 'pointer', transition: '0.2s' }}>{t.toUpperCase()}</button>
           ))}
           <button onClick={handleDownloadPDF} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #3b82f6', color: '#3b82f6', background: 'white', fontWeight: '600', cursor: 'pointer' }}>EXPORT REPORT</button>
@@ -387,6 +466,7 @@ export default function FleetManagerDashboard() {
           {(activeTab === 'customer' || activeTab === 'all_for_pdf') && renderCustomer()}
           {(activeTab === 'internal' || activeTab === 'all_for_pdf') && renderInternal()}
           {(activeTab === 'growth' || activeTab === 'all_for_pdf') && renderGrowth()}
+          {activeTab === 'strategy' && renderStrategy()}
 
         </div>
       </div>
