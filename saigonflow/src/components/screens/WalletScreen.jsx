@@ -20,7 +20,11 @@ export default function WalletScreen({ user, nav }) {
       .select('balance')
       .eq('email', user.email)
       .single()
-    if (profile) setBalance(profile.balance)
+    if (profile) {
+      setBalance(profile.balance)
+    } else {
+      setBalance(150000) // Dummy fallback
+    }
 
     const { data: trips } = await supabase
       .from('trips')
@@ -28,7 +32,7 @@ export default function WalletScreen({ user, nav }) {
       .eq('user_email', user.email)
       .order('created_at', { ascending: false })
     
-    if (trips) {
+    if (trips && trips.length > 0) {
       const tripTx = trips.map(t => ({
         id: t.id,
         type: t.vehicle_id.includes('Bus') ? 'Shuttle Bus' : 'E-bike Rental',
@@ -40,6 +44,14 @@ export default function WalletScreen({ user, nav }) {
         isPos: false
       }))
       setTransactions(tripTx)
+    } else {
+      // Dummy fallback transactions
+      setTransactions([
+        { id: 1, type: 'E-bike Rental', detail: 'Ga Bến Thành → Thảo Điền', date: 'Hôm nay 08:30', amount: '-5,000₫', icon: '⚡', color: '#10b981', isPos: false },
+        { id: 2, type: 'Metro Ticket', detail: 'Line 1', date: 'Hôm nay 08:15', amount: '-20,000₫', icon: '🚇', color: '#8b5cf6', isPos: false },
+        { id: 3, type: 'Top-up FlowPass', detail: 'Momo', date: 'Hôm qua 15:20', amount: '+200,000₫', icon: '💳', color: '#3b82f6', isPos: true },
+        { id: 4, type: 'Shuttle Bus', detail: 'Tuyến #S05', date: '14/05/2026 17:45', amount: '-10,000₫', icon: '🚌', color: '#3b82f6', isPos: false }
+      ])
     }
     setIsLoading(false)
   }

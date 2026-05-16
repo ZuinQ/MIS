@@ -18,46 +18,74 @@ export default function AIAssistantScreen({ nav }) {
     scrollToBottom()
   }, [messages, isTyping])
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const [activeRoute, setActiveRoute] = useState(null)
+  const [lastVehicleId, setLastVehicleId] = useState(null)
+
+  const handleSend = (overrideText = null) => {
+    const textToSend = typeof overrideText === 'string' ? overrideText : input;
+    if (!textToSend.trim()) return;
     
-    const userText = input.trim();
-    // Add user message
+    const userText = textToSend.trim();
     const newMsg = { role: 'user', text: userText }
     setMessages(prev => [...prev, newMsg])
     setInput('')
     setIsTyping(true)
     
-    // Simulate AI response with context
     setTimeout(() => {
       setIsTyping(false)
-      
       const lowerInput = userText.toLowerCase();
+      const lastBotMsg = messages.filter(m => m.role === 'bot').pop()?.text.toLowerCase() || "";
+      
       let botResponse = "";
       let hasAction = false;
 
-      // Smart Response Logic
-      if (lowerInput.includes("kẹt xe") || lowerInput.includes("tắc đường") || lowerInput.includes("ùn tắc")) {
-        botResponse = "Dựa trên dữ liệu giao thông thời gian thực, các trục đường chính như Nguyễn Huệ và cầu Sài Gòn đang có mật độ xe cao. Tôi khuyên bạn nên sử dụng Metro Line 1 kết hợp với xe đạp điện E-bike để về nhà nhanh hơn khoảng 15 phút.";
-      } else if (lowerInput.includes("tiền") || lowerInput.includes("ví") || lowerInput.includes("số dư") || lowerInput.includes("nạp")) {
-        botResponse = "FlowPass của bạn hiện có đủ số dư cho các chuyến hành trình sắp tới. Bạn có muốn tôi thiết lập tự động nạp tiền khi số dư dưới 50,000₫ không? Điều này sẽ giúp bạn không bao giờ bị gián đoạn hành trình.";
-      } else if (lowerInput.includes("xe") || lowerInput.includes("ebike") || lowerInput.includes("đặt")) {
-        botResponse = "Tôi đã tìm thấy một chiếc E-bike (Mã #V0712) đầy pin cách bạn 3 phút đi bộ. Bạn có muốn tôi giữ xe trong 10 phút để bạn di chuyển đến đó không?";
+      // 1. Handle Route Inquiries (Context-Aware)
+      if (lowerInput.includes("đi đâu") || lowerInput.includes("từ đâu") || lowerInput.includes("lộ trình gì") || lowerInput.includes("là gì")) {
+        if (activeRoute) {
+          botResponse = `Lộ trình tôi đề xuất là đi từ **${activeRoute.from}** đến **${activeRoute.to}**. \n\nCụ thể: Bạn đi Metro Line 1 đến Ga ${activeRoute.to}, sau đó lấy xe E-bike tại trạm cách đó 50m. Bạn thấy lộ trình này ổn không?`;
+          hasAction = true;
+        } else {
+          botResponse = "Hiện tại mình chưa thiết lập lộ trình cụ thể. Bạn muốn đi từ đâu đến đâu để mình gợi ý tuyến đường xanh nhất nhé?";
+        }
+      } 
+      // 2. Handle Traffic
+      else if (lowerInput.includes("kẹt xe") || lowerInput.includes("tắc đường")) {
+        botResponse = "Dữ liệu giao thông báo cáo mật độ xe cao tại Cầu Sài Gòn và hầm Thủ Thiêm. Lựa chọn Metro + E-bike sẽ giúp bạn tiết kiệm được 20 phút di chuyển.";
+      }
+      // 3. Handle different choices (Avoid Repetition)
+      else if (lowerInput.includes("khác") || lowerInput.includes("đổi")) {
+        const vehicles = ["#V0882", "#V0113", "#V0452", "#V0712"];
+        let nextVeh = vehicles.find(v => v !== lastVehicleId) || vehicles[0];
+        setLastVehicleId(nextVeh);
+        botResponse = `Đã đổi! Mình tìm thấy xe E-bike dự phòng mã ${nextVeh} tại trạm phía đối diện (cách 120m). Xe này cũng đầy 95% pin. Bạn muốn giữ xe này không?`;
         hasAction = true;
-      } else if (lowerInput.includes("lộ trình") || lowerInput.includes("đi đâu")) {
-        botResponse = "Hôm nay thời tiết rất đẹp cho một chuyến đi xanh! Tôi đề xuất lộ trình tham quan: Ga Bến Thành -> Dinh Độc Lập -> Hồ Con Rùa hoàn toàn bằng xe điện. Bạn sẽ giảm được 2kg khí thải CO2 cho thành phố đấy!";
-      } else if (lowerInput.includes("chào") || lowerInput.includes("hello") || lowerInput.includes("hi")) {
-        botResponse = "Chào bạn! Rất vui được gặp lại. Tôi có thể giúp bạn lên kế hoạch di chuyển xanh, kiểm tra ví hoặc tìm trạm sạc E-bike gần nhất. Bạn muốn bắt đầu từ đâu?";
-      } else {
-        botResponse = "Đây là một ý tưởng hay! Theo phân tích dữ liệu của SaigonFlow, hành vi di chuyển này rất phù hợp với lối sống bền vững. Bạn có muốn tôi tối ưu hóa lộ trình này để tiết kiệm năng lượng hơn không?";
+      }
+      // 4. Handle Search Route
+      else if (lowerInput.includes("đến") || lowerInput.includes("về") || lowerInput.includes("đi")) {
+        const match = lowerInput.match(/(?:tới|đến|về|đi)\s+([\w\s]+)/i);
+        let dest = "Thảo Điền";
+        if (match && match[1]) {
+           dest = match[1].replace(/(giúp|mình|nhé|nha|với|ạ)/g, '').trim();
+           dest = dest.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+        setActiveRoute({ from: "Ga Bến Thành", to: dest });
+        botResponse = `Đã rõ! Lộ trình từ Ga Bến Thành về **${dest}** tối ưu nhất là: \n1. Đi Metro Line 1 (15 phút)\n2. Thuê E-bike tại trạm cuối (5 phút).\n\nTổng chi phí: 25,000₫. Bạn có muốn mình đặt chỗ luôn không?`;
+        hasAction = true;
+      }
+      // 5. Handle Booking
+      else if (lowerInput.includes("đặt") || lowerInput.includes("đồng ý") || lowerInput.includes("ok")) {
+        botResponse = "Tuyệt vời! Mình đã đặt vé Metro và giữ xe E-bike cho bạn. Mã QR nhận xe đã được gửi vào ví FlowPass. Chúc bạn một chuyến đi xanh và vui vẻ! 🌿";
+      }
+      // Fallbacks
+      else if (lowerInput.includes("ví") || lowerInput.includes("tiền")) {
+        botResponse = "FlowPass của bạn hiện có 150,000₫. Đủ cho khoảng 6 chuyến đi Metro + E-bike nữa nhé!";
+      }
+      else {
+        botResponse = "Mình hiểu rồi. Bạn cần mình hỗ trợ thêm gì về lộ trình di chuyển hay kiểm tra dịch vụ nào khác của SaigonFlow không?";
       }
 
-      setMessages(prev => [...prev, { 
-        role: 'bot', 
-        text: botResponse,
-        hasAction: hasAction
-      }])
-    }, 1200)
+      setMessages(prev => [...prev, { role: 'bot', text: botResponse, hasAction: hasAction }])
+    }, 1000)
   }
 
   const handleKeyPress = (e) => {
@@ -128,8 +156,8 @@ export default function AIAssistantScreen({ nav }) {
               
               {msg.hasAction && (
                 <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-                  <button onClick={() => setMessages(p => [...p, {role: 'user', text: 'Đồng ý đặt lộ trình này.'}])} style={{ background: '#d1fae5', color: '#059669', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>Đồng ý đặt (25k₫)</button>
-                  <button onClick={() => setMessages(p => [...p, {role: 'user', text: 'Cho mình xem lộ trình khác.'}])} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Đổi lộ trình</button>
+                  <button onClick={() => handleSend('Đồng ý đặt.')} style={{ background: '#d1fae5', color: '#059669', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>Đồng ý đặt</button>
+                  <button onClick={() => handleSend('Cho mình xem lựa chọn khác.')} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Đổi lựa chọn</button>
                 </div>
               )}
             </div>
@@ -153,7 +181,7 @@ export default function AIAssistantScreen({ nav }) {
           {['Tình trạng kẹt xe?', 'Trạm E-bike gần nhất', 'Nạp tiền FlowPass'].map(chip => (
             <button 
               key={chip} 
-              onClick={() => { setInput(chip); setTimeout(handleSend, 100); }}
+              onClick={() => handleSend(chip)}
               style={{
                 background: 'white', border: '1px solid #10b981', color: '#059669',
                 padding: '8px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: '600',

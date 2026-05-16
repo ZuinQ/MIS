@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabaseClient'
 export default function HomeScreen({ user, nav }) {
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [selectedPin, setSelectedPin] = useState(null)
-  const [fleet, setFleet] = useState(dashboardData.fleetStatus)
+  const [fleet, setFleet] = useState(dashboardData.liveVehicles)
   const [balance, setBalance] = useState('...')
 
   useEffect(() => {
@@ -66,16 +66,20 @@ export default function HomeScreen({ user, nav }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
           {[
             { val: '42', label: 'Trips', icon: '🚲' },
-            { val: balance, label: 'Balance', icon: '💳' },
+            { val: balance, label: 'Balance', icon: '💳', screen: 'wallet' },
             { val: '18kg', label: 'CO₂ Cut', icon: '🌿' }
           ].map(s => (
-            <div key={s.label} style={{
+            <div 
+              key={s.label} 
+              onClick={() => s.screen ? nav(s.screen) : null}
+              style={{
               background: 'rgba(255,255,255,0.15)',
               backdropFilter: 'blur(10px)',
               borderRadius: '16px',
               padding: '12px',
               textAlign: 'center',
-              border: '1px solid rgba(255,255,255,0.2)'
+              border: '1px solid rgba(255,255,255,0.2)',
+              cursor: s.screen ? 'pointer' : 'default'
             }}>
               <div style={{ fontSize: '18px', marginBottom: '4px' }}>{s.icon}</div>
               <div style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>{s.val}</div>
